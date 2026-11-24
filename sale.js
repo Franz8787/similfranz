@@ -585,7 +585,14 @@
         var m = gltf.scene.clone(true);
         m.traverse(function (o) {
           if (o.isMesh) {
-            if (/screen/i.test(o.name) || (o.material && /screen/i.test(o.material.name))) o.material = r.screen.mat;
+            if (/screen/i.test(o.name) || (o.material && /screen/i.test(o.material.name))) {
+              // i modelli glTF hanno le coordinate della texture con la V rovesciata: stessa tela, ma senza flipY, altrimenti lo schermo esce capovolto
+              if (!r.screen.matGlb) {
+                var tg = new THREE.CanvasTexture(r.screen.canvas); tg.encoding = THREE.sRGBEncoding; tg.minFilter = THREE.LinearFilter; tg.generateMipmaps = false; tg.flipY = false;
+                r.screen.texGlb = tg; r.screen.matGlb = new THREE.MeshBasicMaterial({ map: tg, toneMapped: false, side: THREE.DoubleSide });
+              }
+              o.material = r.screen.matGlb;
+            }
             else { o.material = o.material.clone(); o.material.roughness = 0.6; o.material.metalness = 0; }
           }
         });
@@ -1032,7 +1039,7 @@
       if (draw) {
         if (r.s.schermo === "spo2") drawSpo2(r.screen.ctx, 160, 240, r.state, clock);
         else drawMonitor(r.screen.ctx, 320, 200, r.state, clock);
-        r.screen.tex.needsUpdate = true;
+        r.screen.tex.needsUpdate = true; if (r.screen.texGlb) r.screen.texGlb.needsUpdate = true;
         drawRegia(r.regiaScreen.ctx, 128, 96, r.p.accento || "#46f2a0", r.flash);
         r.regiaScreen.tex.needsUpdate = true;
       }
