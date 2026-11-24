@@ -42,3 +42,8 @@ Blister, il bovaro dell'Appenzell del centro, è ispirato al cane dell'autore (m
 ## Immagini
 
 Foto e rendering in `img/` provengono dalle pagine dei progetti similFranz; `img/sale.jpg` è una cattura della scena della pagina.
+
+## Blister
+
+Blister, il bovaro dell'Appenzell del centro, è ispirato al cane dell'autore. È modellato a mano nel codice (`blister.js`)
+con forme semplici e animato proceduralmente: nessun modello esterno.
