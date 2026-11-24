@@ -6,7 +6,7 @@ L'iPad®, l'iPod touch® e il tablet Android™ che avevi messo da parte diventa
 per la tua simulazione sanitaria. Tu conduci lo scenario, la squadra cresce.
 Open source, pensati per formatori, istruttori e facilitatori di simulazione.
 
-Questa è la casa dell'ecosistema similFranz: la pagina **https://franz8787.github.io/** ti porta a ogni progetto.
+Questa è la casa dell'ecosistema similFranz: la pagina **https://franz8787.github.io/similfranz/** ti porta a ogni progetto.
 
 ## L'ecosistema
 
