@@ -13,6 +13,7 @@
    immagine     percorso in img/ (JPEG < 200 KB, senza EXIF)
    alt          testo alternativo dell'immagine
    accento      colore della sala e della scheda
+   regia_web    facoltativo: una frase sulla regia web del dispositivo (compare nella sala regia)
    sala:
      modello    facoltativo, GLB in modelli/ (senza: dispositivo segnaposto)
      posto      "dito" (sul letto, al dito del manichino) oppure "carrello" (accanto al letto)
@@ -35,6 +36,7 @@ window.SIMILFRANZ_PROGETTI = [
     immagine: "img/saturimetro.jpg",
     alt: "Il saturimetro similFranz acceso in mano: SpO2 96, polso 78, curva pletismografica e sensore da dito collegato",
     accento: "#5fd4ff",
+    regia_web: "console web nel browser del telefono: SpO₂, polso, curva, sonda e allarmi",
     sala: {
       modello: "modelli/saturimetro.glb",
       posto: "dito",
@@ -60,6 +62,7 @@ window.SIMILFRANZ_PROGETTI = [
     immagine: "img/monitor-ipad.jpg",
     alt: "Il monitor similFranz nel suo guscio stampato in 3D e, accanto, il secondo iPad con la regia del facilitatore",
     accento: "#46f2a0",
+    regia_web: "regia web dal computer: parametri, scenari a fasi, registro e debriefing",
     sala: {
       modello: "modelli/monitor-ipad.glb",
       posto: "carrello",
@@ -84,6 +87,7 @@ window.SIMILFRANZ_PROGETTI = [
     immagine: "img/monitor-android.jpg",
     alt: "Rendering del monitor similFranz per Android nel suo guscio con maniglia: schermo acceso in fibrillazione ventricolare",
     accento: "#ffbe5c",
+    regia_web: "regia web dal computer: parametri, stati, scenari, Sala in diretta, Storia Sim",
     sala: {
       modello: "modelli/monitor-android.glb",
       posto: "carrello",

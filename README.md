@@ -1,14 +1,14 @@
 # similFranz
 
-**Vecchi dispositivi, nuovi battiti.**
+**Apri quel cassetto: dentro c'è una sala di simulazione.**
 
-L'iPad®, l'iPod touch® e il tablet Android™ che avevi messo da parte tornano in sala come strumenti di simulazione
-sanitaria. Li riaccendi tu, con una stampante 3D e un pomeriggio di lavoro, e lo scenario prende vita.
+L'iPad®, l'iPod touch® e il tablet Android™ che avevi messo da parte diventano monitor, defibrillatore e saturimetro
+per la tua simulazione sanitaria. Tu conduci lo scenario, la squadra cresce.
 Open source, pensati per formatori, istruttori e facilitatori di simulazione.
 
-Questa è la casa della famiglia: la pagina **https://franz8787.github.io/** ti porta a ogni progetto.
+Questa è la casa dell'ecosistema similFranz: la pagina **https://franz8787.github.io/** ti porta a ogni progetto.
 
-## La famiglia
+## L'ecosistema
 
 | Progetto | Dispositivo | Stato | Pagina | Codice |
 |---|---|---|---|---|
@@ -30,7 +30,7 @@ Niente router, niente internet, niente abbonamenti.
 
 ## Il metodo
 
-1. **Prebriefing**: presenti il dispositivo e condividi gli obiettivi di apprendimento. Chi conosce lo strumento si sente al sicuro.
+1. **Familiarizzazione**: presenti il dispositivo e condividi gli obiettivi di apprendimento. Chi conosce lo strumento si sente al sicuro.
 2. **Scenario**: i partecipanti agiscono, tu faciliti e dai i cue. Il registro lavora da solo.
 3. **Debriefing**: parti dai fatti, il gruppo costruisce la riflessione.
 
@@ -40,7 +40,7 @@ Niente router, niente internet, niente abbonamenti.
 |---|---|
 | `index.html` | la pagina: testi, stile e la traccia ECG 3D dell'apertura |
 | `progetti.js` | **l'elenco dei progetti**: schede, sale 3D, bottoni e versione senza 3D si generano da qui |
-| `sale.js` | le sale di simulazione isometriche (three.js) e le schede |
+| `sale.js` | il centro di simulazione isometrico (three.js): sale dei progetti, corridoio, regia, debriefing, e le schede |
 | `img/` | foto e rendering (JPEG sotto i 200 KB, senza dati EXIF) |
 | `modelli/` | modelli 3D in GLB: persone (CC0) e gusci dei dispositivi |
 | `CREDITI.md` | autori e licenze dei modelli e delle librerie |
@@ -52,7 +52,8 @@ Rispetta «riduci movimento» del sistema, ha una versione statica quando WebGL 
 
 1. **Aggiungi la voce** in fondo a `progetti.js`, copiando una di quelle esistenti. Campi: `id`, `nome`, `dispositivo`,
    `descrizione`, `stato` (`"disponibile"` o `"in arrivo"`), `pagina` (la Pages del progetto: è l'unico link verso il
-   progetto), `doi` (facoltativo), `immagine`, `alt`, `accento` (colore) e `sala` con `posto` (`"dito"` o `"carrello"`),
+   progetto), `doi` (facoltativo), `immagine`, `alt`, `accento` (colore), `regia_web` (facoltativo: una frase sulla regia web del dispositivo, che compare nella
+   sala regia del centro; senza, il progetto non ha la sua riga) e `sala` con `posto` (`"dito"` o `"carrello"`),
    `schermo` (`"spo2"` o `"monitor"`), `regia` (`"telefono"`, `"ipad"`, `"pocket"`, `"tablet"`), `scena` e 2-3 `azioni`
    dell'istruttore. Gli stati disponibili sono descritti in testa al file.
 2. **Metti l'immagine** in `img/`: JPEG largo circa 1200 px, sotto i 200 KB, senza EXIF né GPS.
@@ -60,8 +61,9 @@ Rispetta «riduci movimento» del sistema, ha una versione statica quando WebGL 
    una mesh chiamata `screen` per lo schermo) e indicalo in `sala.modello`. Senza modello la sala usa un dispositivo
    segnaposto. Tieni tutti i GLB insieme sotto i 3 MB.
 4. **Prova in locale**: dalla cartella dell'hub lancia `python3 -m http.server 8770` e apri http://127.0.0.1:8770/.
-   La griglia delle sale si riorganizza da sola (tre per fila su schermo largo, una sopra l'altra sul telefono) e la
-   camera inquadra tutto. Un link diretto a una sala: `?sala=<id>`.
+   Il centro di simulazione si riorganizza da solo: fino a 4 progetti le sale stanno tutte dietro il corridoio, con
+   regia e debriefing di fronte; da 5 in su le sale si dividono sui due lati. La camera inquadra tutto e le etichette
+   si scostano per non sovrapporsi. Un link diretto a una sala: `?sala=<id>`; alla sala regia: `?sala=regia`.
 5. Se il modello viene da fuori, scrivi titolo, autore, pagina, licenza e data in `CREDITI.md` e nel footer.
    Ammesse CC0, CC BY, CC BY-SA.
 

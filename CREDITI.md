@@ -2,7 +2,8 @@
 
 ## Modelli 3D di persone
 
-Usati nelle sale isometriche della pagina (partecipanti, istruttore e, ricolorato in un solo tono chiaro, il manichino).
+Usati nel centro di simulazione della pagina (partecipanti, istruttore, chi cammina nel corridoio, chi siede in regia e al
+debriefing e, ricolorato in un solo tono chiaro, il manichino). Animazioni incluse nei file: Idle, Walk, Sitting.
 File originali, non modificati. Occhi e sopracciglia vengono ricolorati dalla pagina per lasciare le figure senza volto.
 
 | File | Titolo | Autore | Pagina | Licenza | Scaricato |
@@ -19,6 +20,11 @@ https://creativecommons.org/publicdomain/zero/1.0/). La CC0 non richiede attribu
 `modelli/saturimetro.glb`, `modelli/monitor-ipad.glb`, `modelli/monitor-android.glb`: gusci dei progetti similFranz
 (© 2026 Francesco Palmisano, licenza CC BY-NC 4.0), convertiti in GLB leggeri con Blender e semplificati per il web.
 I tablet e l'iPod dentro i gusci sono lastre semplici con uno schermo disegnato dalla pagina.
+
+## Arredi
+
+Letti, carrelli, piantane, sedie, tavolo, banco della regia, pareti di vetro e schermi sono forme semplici costruite
+direttamente nel codice della pagina (`sale.js`): nessun modello esterno.
 
 ## Librerie e caratteri
 
