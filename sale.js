@@ -261,10 +261,13 @@
   }
   P.forEach(function (p, i) { rooms.push(buildRoom(p, i)); });
 
+  var multiRow = false;
   function layout() {
     var W = canvas.clientWidth || 800, H = canvas.clientHeight || 600;
-    var cols = W / H < 0.9 ? 1 : Math.min(rooms.length, 3);
+    // fino a 3 sale una fila; da 4 in su una griglia il più possibile quadrata (4 = 2×2, 5-6 = 3×2, 7-9 = 3×3…)
+    var cols = W / H < 0.9 ? 1 : (rooms.length <= 3 ? rooms.length : Math.ceil(Math.sqrt(rooms.length)));
     var rows = Math.ceil(rooms.length / cols), step = ROOM + GAP;
+    multiRow = cols > 1 && rows > 1;
     rooms.forEach(function (r, i) {
       if (cols === 1) {
         // telefono: sale impilate in verticale sullo schermo (diagonale del mondo isometrico)
@@ -542,11 +545,31 @@
   function placeLabels() {
     var W = canvas.clientWidth, H = canvas.clientHeight;
     if (W < 860) { rooms.forEach(function (r) { r.btn.style.transform = ""; }); return; }
-    rooms.forEach(function (r) {
-      tmpV.set(-0.3, 0, ROOM / 2).add(r.group.position);
+    var boxes = rooms.map(function (r) {
+      // una fila: sotto il bordo anteriore della sala; griglia: dentro la sala, sul pavimento vicino all'angolo verso chi guarda
+      if (multiRow) tmpV.set(ROOM / 2 - 1.7, 0, ROOM / 2 - 1.7).add(r.group.position);
+      else tmpV.set(-0.3, 0, ROOM / 2).add(r.group.position);
       tmpV.project(camera);
-      var x = (tmpV.x + 1) / 2 * W, y = (1 - tmpV.y) / 2 * H;
-      r.btn.style.transform = "translate(" + Math.round(x) + "px," + Math.round(y) + "px) translate(-50%, 6px)";
+      var w = r.btn.offsetWidth || 200, h = r.btn.offsetHeight || 34;
+      return { r: r, w: w, h: h, x: (tmpV.x + 1) / 2 * W, y: (1 - tmpV.y) / 2 * H + (multiRow ? 0 : 6 + h / 2) };
+    });
+    // le etichette non si devono mai toccare: quelle sovrapposte si allontanano (soprattutto in verticale)
+    for (var k = 0; k < 24; k++) {
+      var moved = false;
+      for (var a = 0; a < boxes.length; a++) for (var b = a + 1; b < boxes.length; b++) {
+        var A = boxes[a], B = boxes[b];
+        var ox = (A.w + B.w) / 2 + 10 - Math.abs(A.x - B.x), oy = (A.h + B.h) / 2 + 8 - Math.abs(A.y - B.y);
+        if (ox > 0 && oy > 0) {
+          var up = A.y <= B.y ? A : B, dn = up === A ? B : A;
+          up.y -= oy / 2; dn.y += oy / 2; moved = true;
+        }
+      }
+      if (!moved) break;
+    }
+    boxes.forEach(function (q) {
+      q.x = Math.max(q.w / 2 + 6, Math.min(W - q.w / 2 - 6, q.x));
+      q.y = Math.max(q.h / 2 + 6, Math.min(H - q.h / 2 - 6, q.y));
+      q.r.btn.style.transform = "translate(" + Math.round(q.x) + "px," + Math.round(q.y) + "px) translate(-50%, -50%)";
     });
   }
 
