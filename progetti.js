@@ -17,6 +17,10 @@
    sala:
      modello    facoltativo, GLB in modelli/ (senza: dispositivo segnaposto)
      posto      "dito" (sul letto, al dito del manichino) oppure "carrello" (accanto al letto)
+     ambiente   facoltativo: "extraospedaliero" = soccorso a terra (manichino supino su un telo, niente letto,
+                dispositivo appoggiato a terra, squadra in ginocchio). Senza: sala con il letto
+     divise     facoltativo: "soccorso" = divise generiche ad alta visibilità (arancione e giallo fluo con bande
+                riflettenti, nessuna scritta o logo) per i partecipanti. Senza: divise da sala
      schermo    "spo2" (saturimetro) oppure "monitor"
      regia      "telefono", "ipad", "pocket" oppure "tablet": che cosa tiene in mano l'istruttore
      scena      una frase che racconta la sala
@@ -94,7 +98,9 @@ window.SIMILFRANZ_PROGETTI = [
       schermo: "monitor",
       regia: "tablet",
       stato_iniziale: "base",
-      scena: "Il tablet nel guscio con maniglia è accanto al letto; l'istruttore lo guida dal tablet controller.",
+      ambiente: "extraospedaliero",
+      divise: "soccorso",
+      scena: "Il monitor è a terra accanto al paziente; la squadra di soccorso lavora in ginocchio; l'istruttore guida dal tablet controller.",
       azioni: [
         { etichetta: "Abbassa la pressione", stato: "ipotensione" },
         { etichetta: "Arresto in FV", stato: "fv" },

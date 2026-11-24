@@ -151,10 +151,32 @@ h3{font:700 1.4rem/1.15 var(--display);margin:0 0 8px;letter-spacing:-.01em}
 .regia-list{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:8px}
 .regia-list li{--acc:var(--green);padding-left:12px;border-left:3px solid var(--acc);font-size:.85rem;color:#d3dee5;line-height:1.35}
 .regia-list li b{display:block;font:600 .92rem/1.2 var(--display);color:var(--ink)}
+.pin{--acc:var(--green);position:absolute;left:0;top:0;width:40px;height:40px;margin:-20px 0 0 -20px;padding:0;border:0;background:none;cursor:pointer;pointer-events:auto;display:flex;align-items:center;justify-content:center;z-index:1}
+.pin .pd{position:relative;width:24px;height:24px;border-radius:50%;background:rgba(5,10,16,.85);border:2px solid var(--acc);box-shadow:0 0 12px color-mix(in srgb,var(--acc) 55%,transparent);transition:transform .18s}
+.pin .pd::after{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--acc)}
+.pin.pin-info .pd::after{inset:7px;opacity:.75}
+.pin .pl{position:absolute;left:30px;top:50%;transform:translateY(-50%) scale(.92);transform-origin:left center;opacity:0;pointer-events:none;white-space:nowrap;padding:7px 12px;border-radius:12px;background:rgba(5,10,16,.94);border:1px solid var(--acc);font:600 .9rem/1.2 var(--display);color:var(--ink);transition:opacity .16s,transform .2s}
+.pin .pl small{margin-left:6px;font:600 .68rem/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--amber)}
+.pin .pl em{display:block;font:500 .78rem/1.3 var(--body);font-style:normal;color:var(--muted);margin-top:2px}
+.pin.flip .pl{left:auto;right:30px;transform-origin:right center}
+.pin.open{z-index:3}
+.pin.open .pd{transform:scale(1.12)}
+.pin.open .pl{opacity:1;transform:translateY(-50%) scale(1)}
+.pin:focus-visible{outline:none}
+.pin:focus-visible .pd{outline:3px solid #fff;outline-offset:3px}
+.sale.inside .pin{opacity:0;pointer-events:none}
+@media (min-width:860px){.sale-labels .room-btn{display:none}}
+.sale-legend{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.chip{--acc:var(--green);display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(8,14,22,.8);color:var(--ink);font:600 .86rem/1 var(--display);cursor:pointer}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--acc)}
+.chip small{font:600 .66rem/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--amber)}
+.chip:hover,.chip:focus-visible{border-color:var(--acc)}
+.chip:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.chip.chip-info{cursor:help;color:#cfd8e3}
 .room-btn:hover{background:rgba(16,28,40,.95);border-color:var(--acc)}
 .room-btn:focus-visible,.act-btn:focus-visible,.btn:focus-visible,a:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .sale.inside .room-btn{opacity:0;pointer-events:none}
-.sale-tip{position:absolute;pointer-events:none;padding:7px 10px;border-radius:8px;background:rgba(4,8,12,.92);border:1px solid var(--line);font:500 .85rem/1.2 var(--display);color:var(--ink);white-space:nowrap;transform:translateX(-10%)}
+.sale-tip{position:absolute;left:0;top:0;will-change:transform;pointer-events:none;padding:7px 10px;border-radius:8px;background:rgba(4,8,12,.92);border:1px solid var(--line);font:500 .85rem/1.2 var(--display);color:var(--ink);white-space:nowrap;transform:translateX(-10%)}
 .sale-side{position:absolute;top:16px;right:16px;bottom:16px;width:min(380px,40%);display:flex;flex-direction:column;gap:10px;
   opacity:0;transform:translateX(24px);pointer-events:none;transition:opacity .45s ease,transform .6s cubic-bezier(.2,.75,.2,1)}
 .sale.inside .sale-side{opacity:1;transform:none;pointer-events:auto}
@@ -178,6 +200,7 @@ h3{font:700 1.4rem/1.15 var(--display);margin:0 0 8px;letter-spacing:-.01em}
 .sale.is-fallback canvas,.sale.is-fallback .sale-labels,.sale.is-fallback .sale-side,.sale.is-fallback .sale-loading{display:none}
 .sale.is-fallback .sale-fallback{display:block}
 .sale.is-fallback + .sale-hint{display:none}
+.sale.is-fallback ~ .sale-legend{display:none}
 .sale-fallback img{border-radius:18px;border:1px solid var(--line);margin-bottom:22px}
 .room-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
 .room-card{--acc:var(--green);background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--acc);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px}
@@ -191,6 +214,7 @@ h3{font:700 1.4rem/1.15 var(--display);margin:0 0 8px;letter-spacing:-.01em}
   .room-btn{position:relative;justify-content:flex-start;white-space:normal;padding:13px 14px;font-size:1rem}
   .sale.inside .sale-labels{display:none}
   .room-cap{display:none}
+  .pin,.sale-legend{display:none}
   .sale-loading{top:200px}
   .sale-side{position:relative;inset:auto;width:auto;transform:none;margin-top:14px;display:none}
   .sale.inside .sale-side{display:flex}
@@ -303,7 +327,8 @@ footer .copy{color:var(--ink);margin-top:20px}
           <div id="sale-fallback-list" class="room-cards"></div>
         </div>
       </div>
-      <p class="sale-hint">Tocca una sala, la regia o il laboratorio per entrare. In sala, tocca l'istruttore o i bottoni per dare il prossimo cue.</p>
+      <div id="sale-legend" class="sale-legend" role="group" aria-label="Legenda del centro di simulazione"></div>
+      <p class="sale-hint">Passa su una sala per vedere di che cosa si tratta, tocca per entrare.</p>
     </div>
     <div class="wrap">
       <p class="offline reveal"><b>Collegati ovunque.</b> Monitor e controller si parlano direttamente: li accendi e sei in scenario, in sala, in reparto o in palestra. Il saturimetro si collega all'hotspot del tuo telefono. E dove c'è un Wi-Fi® che copre la sala, dal computer apri le regie web dei monitor. Nelle sale, la scia di luce fra l'istruttore e il dispositivo è questo collegamento.</p>
@@ -355,6 +380,7 @@ footer .copy{color:var(--ink);margin-top:20px}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
 <script src="progetti.js"></script>
 <script>
 (function(){
@@ -650,6 +676,9 @@ footer .copy{color:var(--ink);margin-top:20px}
     camera.position.y = 0.6 - scrollK*0.25;
     camera.lookAt(0, -0.2 - scrollK*0.2, 0);
     placeWaves();
+    // oltre l'apertura lo sfondo è tenue: risoluzione più bassa, la GPU respira
+    var wantPR = scrollK > 0.9 ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
+    if (renderer.getPixelRatio() !== wantPR) { renderer.setPixelRatio(wantPR); renderer.setSize(W, H, false); }
   }
   function render(){ renderer.render(scene, camera); }
 
@@ -673,8 +702,18 @@ footer .copy{color:var(--ink);margin-top:20px}
   }
 
   var raf = 0, prev = 0;
+  var HP = { n: 0, sum: 0, worst: 0, t0: performance.now() };
+  window.__heroPerf = function(){ var n = Math.max(1, HP.n), r = { frames: HP.n, fps: +(HP.n/((performance.now()-HP.t0)/1000)).toFixed(1), cpuMsAvg: +(HP.sum/n).toFixed(2), cpuMsWorst: +HP.worst.toFixed(2), calls: renderer.info.render.calls, pixelRatio: renderer.getPixelRatio() }; return r; };
+  window.__heroPerfReset = function(){ HP.n = HP.sum = HP.worst = 0; HP.t0 = performance.now(); };
+  var hTick = 0;
   function frame(now){
+    var _h0 = performance.now();
     raf = requestAnimationFrame(frame);
+    // mai due scene pesanti insieme: quando il centro di simulazione occupa lo schermo lo sfondo resta fermo;
+    // oltre l'apertura lo sfondo va a 30 fps
+    if (window.__saleInVista) { prev = now; return; }
+    hTick++;
+    if (scrollK > 0.9 && (hTick & 1)) { return; }
     var dt = prev ? Math.min(0.05, (now - prev)/1000) : 0.016;
     prev = now;
     clock += dt;
@@ -682,6 +721,7 @@ footer .copy{color:var(--ink);margin-top:20px}
     dustMat.uniforms.uTime.value = clock;
     advance(); rebuild(); colorAt(clock); hud(); updateWaves(clock);
     render();
+    var _hd = performance.now() - _h0; HP.n++; HP.sum += _hd; if (_hd > HP.worst) HP.worst = _hd;
   }
   function start(){ if (!raf){ prev = 0; raf = requestAnimationFrame(frame); } }
   function stop(){ if (raf){ cancelAnimationFrame(raf); raf = 0; } }

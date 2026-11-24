@@ -87,12 +87,14 @@
   function fallback() { if (box) box.classList.add("is-fallback"); }
   if (!box || !canvas || typeof THREE === "undefined" || !P.length) { fallback(); return; }
   var gl = null;
-  try { gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl"); } catch (e) {}
+  var DPR = window.devicePixelRatio || 1, AA = DPR <= 1;
+  try { gl = canvas.getContext("webgl", { antialias: AA, powerPreference: "low-power" }) || canvas.getContext("experimental-webgl", { antialias: AA }); } catch (e) {}
   if (!gl) { fallback(); return; }
   var renderer;
-  try { renderer = new THREE.WebGLRenderer({ canvas: canvas, context: gl, antialias: true, powerPreference: "low-power" }); }
+  try { renderer = new THREE.WebGLRenderer({ canvas: canvas, context: gl, antialias: AA, powerPreference: "low-power" }); }
   catch (e) { fallback(); return; }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  var PR_MAX = window.innerWidth < 700 ? 1 : 1.25; // retina: 1.25 al massimo, telefono 1
+  renderer.setPixelRatio(Math.min(DPR, PR_MAX));
   renderer.setClearColor(0x05090f, 1);
   renderer.outputEncoding = THREE.sRGBEncoding;
   box.classList.add("is-3d");
@@ -278,28 +280,44 @@
     r.edgeMat = edgeMat;
     lowWall(G, ROOM / 2 - 0.06, 0, 0.12, ROOM);
     if (front) lowWall(G, 0, ROOM / 2 - 0.06, ROOM, 0.12);
-    // letto
+    // letto (o, nel soccorso extraospedaliero, un telo a terra)
+    var extra = s.ambiente === "extraospedaliero"; r.extra = extra;
     var bed = new THREE.Group(); bed.position.set(-0.2, 0, -0.35);
-    var frame = boxMesh(2.1, 0.08, 0.95, M.bedFrame); frame.position.y = 0.5; bed.add(frame);
-    [[-0.95, -0.4], [0.95, -0.4], [-0.95, 0.4], [0.95, 0.4]].forEach(function (q) { var l = boxMesh(0.06, 0.5, 0.06, M.bedFrame); l.position.set(q[0], 0.25, q[1]); bed.add(l); });
-    var matt = boxMesh(2.0, 0.14, 0.88, M.mattress); matt.position.y = 0.61; bed.add(matt);
-    var pil = boxMesh(0.36, 0.08, 0.6, M.pillow); pil.position.set(-0.78, 0.72, 0); bed.add(pil);
+    if (!extra) {
+      var frame = boxMesh(2.1, 0.08, 0.95, M.bedFrame); frame.position.y = 0.5; bed.add(frame);
+      [[-0.95, -0.4], [0.95, -0.4], [-0.95, 0.4], [0.95, 0.4]].forEach(function (q) { var l = boxMesh(0.06, 0.5, 0.06, M.bedFrame); l.position.set(q[0], 0.25, q[1]); bed.add(l); });
+      var matt = boxMesh(2.0, 0.14, 0.88, M.mattress); matt.position.y = 0.61; bed.add(matt);
+      var pil = boxMesh(0.36, 0.08, 0.6, M.pillow); pil.position.set(-0.78, 0.72, 0); bed.add(pil);
+    } else {
+      var telo = boxMesh(2.2, 0.02, 1.0, std(0x3d5a52, { roughness: 0.95 })); telo.position.y = 0.01; bed.add(telo);
+      var bordo = boxMesh(2.24, 0.012, 1.04, std(0x2a3f3a)); bordo.position.y = 0.006; bed.add(bordo);
+    }
     G.add(bed); r.bed = bed;
-    ivPole(G, -1.55, -1.05);
+    if (!extra) ivPole(G, -1.55, -1.05);
     // pedana per le compressioni (compare solo quando serve)
-    var step = boxMesh(0.7, 1, 0.5, M.step); step.visible = false; G.add(step); r.stepBox = step;
+    var step = boxMesh(0.7, 1, 0.5, M.step); step.visible = false; step.userData.dyn = true; G.add(step); r.stepBox = step;
     // manichino
-    r.mannequinSlot = new THREE.Group(); r.mannequinSlot.position.set(0.72, 0.7, -0.35); G.add(r.mannequinSlot);
+    r.mannequinSlot = new THREE.Group(); r.mannequinSlot.userData.dyn = true; r.mannequinSlot.position.set(0.72, extra ? 0.04 : 0.7, -0.35); G.add(r.mannequinSlot);
     var mp = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1.6, 10), M.mannequin);
     mp.rotation.z = Math.PI / 2; mp.position.set(-0.8, 0.08, 0); r.mannequinSlot.add(mp); r.mannequinPh = mp;
     // dispositivo
-    var dev = new THREE.Group(); r.dev = dev; G.add(dev);
+    var dev = new THREE.Group(); dev.userData.dyn = true; r.dev = dev; G.add(dev);
     var sm = s.schermo === "spo2" ? screenMat(160, 240) : screenMat(320, 200);
     r.screen = sm;
     if (s.posto === "dito") {
       dev.position.set(0.42, 0.69, 0.0); dev.rotation.set(0, -0.5, 0); dev.userData.scale = 4.2;
       var cable = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.42, 6), std(0xe8e8e8)); cable.rotation.z = Math.PI / 2; cable.rotation.y = 0.6;
       cable.position.set(0.62, 0.7, -0.12); G.add(cable);
+    } else if (extra) {
+      // monitor trasportabile appoggiato a terra accanto al paziente, e uno zaino da soccorso
+      dev.position.set(-0.55, 0, -1.3); dev.rotation.y = 0.3; dev.userData.scale = 3.0;
+      var bag = new THREE.Group(); bag.position.set(0.95, 0, -1.25); bag.rotation.y = -0.4; G.add(bag);
+      var bm = std(0xb8402c, { roughness: 0.8 }), bg = std(0x2b2f35), refl = std(0xc9ced4, { roughness: 0.35, metalness: 0.3 });
+      var bb = boxMesh(0.5, 0.46, 0.28, bm); bb.position.y = 0.23; bag.add(bb);
+      var bt = boxMesh(0.5, 0.06, 0.28, bg); bt.position.y = 0.49; bag.add(bt);
+      var pk = boxMesh(0.36, 0.2, 0.06, bm); pk.position.set(0, 0.2, 0.16); bag.add(pk);
+      var band = boxMesh(0.52, 0.035, 0.3, refl); band.position.y = 0.36; bag.add(band);
+      var hdl = boxMesh(0.18, 0.03, 0.04, bg); hdl.position.set(0, 0.55, 0); bag.add(hdl);
     } else {
       var cart = new THREE.Group(); cart.position.set(-1.15, 0, -1.65);
       var cb = boxMesh(0.8, 0.9, 0.55, M.cart); cb.position.y = 0.45; cart.add(cb);
@@ -324,7 +342,7 @@
       { role: "istr", pos: [1.6, 0, -1.25], rotY: -1.13, color: 0x34383f }
     ];
     r.slots.forEach(function (sl) {
-      var gp = new THREE.Group(); gp.position.set(sl.pos[0], 0, sl.pos[2]); gp.rotation.y = sl.rotY;
+      var gp = new THREE.Group(); gp.userData.dyn = true; gp.position.set(sl.pos[0], 0, sl.pos[2]); gp.rotation.y = sl.rotY;
       var ph2 = personPlaceholder(sl.color); gp.add(ph2);
       G.add(gp); sl.group = gp; sl.ph = ph2; sl.base = sl.pos.slice(); sl.cur = { x: sl.pos[0], z: sl.pos[2], y: 0, rot: sl.rotY };
     });
@@ -420,7 +438,7 @@
     var code = screenMat(256, 170); var cpl = new THREE.Mesh(new THREE.PlaneGeometry(0.33, 0.21), code.mat); cpl.position.set(0, 0.12, 0.008); lid.add(cpl);
     f.code = code; f.laptopKeys = new THREE.Object3D(); f.laptopKeys.position.set(0, 0.03, 0.03); lap.add(f.laptopKeys);
     // stampante 3D stilizzata: telaio aperto, piatto, pezzo che cresce
-    var pr = new THREE.Group(); pr.position.set(bx, 0.93, 0.75); pr.scale.setScalar(1.45); G.add(pr);
+    var pr = new THREE.Group(); pr.userData.dyn = true; pr.position.set(bx, 0.93, 0.75); pr.scale.setScalar(1.45); G.add(pr);
     var fm = std(0x3a4450);
     [[-0.24, -0.24], [0.24, -0.24], [-0.24, 0.24], [0.24, 0.24]].forEach(function (q) { var post = boxMesh(0.03, 0.62, 0.03, fm); post.position.set(q[0], 0.31, q[1]); pr.add(post); });
     [[0, -0.24, 0.5, 0.03], [0, 0.24, 0.5, 0.03]].forEach(function (q) { var bar = boxMesh(q[2], q[3], q[3], fm); bar.position.set(0, 0.62, q[1]); pr.add(bar); });
@@ -512,11 +530,14 @@
   var LAB = fixed.filter(function (f) { return f.kind === "lab"; })[0];
   var SELF = [REG, LAB]; // stanze fisse che si possono aprire
   // stampante, codice e persona al banco del laboratorio
-  function updateLab(t) {
+  function updateLabPrinter(t) {
     var pr = LAB.printer, cyc = reduce ? 0.6 : (t % 48) / 48, hgt = 0.006 + 0.12 * cyc;
     pr.part.scale.y = hgt / 0.12; pr.part.position.y = pr.bedY + hgt / 2;
     var gy = pr.bedY + hgt + 0.06; pr.gantry.position.set(0, gy, 0);
     pr.head.position.set(reduce ? 0 : Math.sin(t * 3.1) * 0.09, gy, reduce ? 0 : Math.cos(t * 2.3) * 0.055);
+  }
+  function updateLab(t) {
+    updateLabPrinter(t);
     var o = LAB.workerRig; if (!o || !o.rig) return;
     o.group.updateMatrixWorld(true);
     var fwd = new THREE.Vector3(Math.sin(o.group.rotation.y), 0, Math.cos(o.group.rotation.y)), right = new THREE.Vector3(-fwd.z, 0, fwd.x);
@@ -543,7 +564,7 @@
       tr.mat.opacity += ((on ? 0.95 : 0) - tr.mat.opacity) * (reduce ? 1 : Math.min(1, dt * 4));
       tr.pts.visible = tr.mat.opacity > 0.02;
       if (!tr.pts.visible) return;
-      var b = tr.r.dev.getWorldPosition(new THREE.Vector3()); b.y += tr.r.s.posto === "dito" ? 0.1 : 0.45;
+      var b = tr.r.dev.getWorldPosition(new THREE.Vector3()); b.y += tr.r.s.posto === "dito" ? 0.1 : tr.r.extra ? 0.32 : 0.45;
       var pos = tr.pts.geometry.attributes.position, n = pos.count;
       tr.phase = (tr.phase + (reduce ? 0 : 0.22 * dt)) % 1;
       var lift = 1.2 + pc.distanceTo(b) * 0.12;
@@ -635,7 +656,9 @@
   // ossa usate per le posture (con il «figlio» che indica la direzione dell'osso)
   var CHAIN = { Abdomen: "Torso", Torso: "Neck", Neck: "Head", Head: "Head_end",
     "UpperArm.R": "LowerArm.R", "LowerArm.R": "Palm.R", "Palm.R": "MiddleHand.R",
-    "UpperArm.L": "LowerArm.L", "LowerArm.L": "Palm.L", "Palm.L": "MiddleHand.L" };
+    "UpperArm.L": "LowerArm.L", "LowerArm.L": "Palm.L", "Palm.L": "MiddleHand.L",
+    "UpperLeg.R": "LowerLeg.R", "LowerLeg.R": "LowerLeg.R_end", "Foot.R": "Foot.R_end",
+    "UpperLeg.L": "LowerLeg.L", "LowerLeg.L": "LowerLeg.L_end", "Foot.L": "Foot.L_end" };
   function rigOf(m) {
     var rig = {};
     Object.keys(CHAIN).forEach(function (k) { rig[k] = { b: findBone(m, k), c: findNode(m, CHAIN[k]) }; });
@@ -647,8 +670,26 @@
     istr: { top: 0x2b2f36, bottom: 0x1f2329 },
     w1: { top: 0x6b5ca5, bottom: 0x3a3550 },
     w2: { top: 0x2f8f9d, bottom: 0x2a6f7a },
-    d: { top: 0x4a78c2, bottom: 0x35558a }
+    d: { top: 0x4a78c2, bottom: 0x35558a },
+    // divise da soccorso generiche, alta visibilità: nessuna scritta, logo o sigla
+    p1S: { top: 0xff6a1a, bottom: 0xff6a1a, bands: true },
+    p2S: { top: 0xd8ff2a, bottom: 0xd8ff2a, bands: true }
   };
+  // bande riflettenti grigio-argento attaccate alle ossa: seguono il corpo
+  var REFL = new THREE.MeshStandardMaterial({ color: 0xcfd5db, roughness: 0.3, metalness: 0.35, side: THREE.DoubleSide });
+  function addBands(m) {
+    m.updateMatrixWorld(true);
+    [["UpperArm.R", "LowerArm.R", 0.6, 0.058], ["UpperArm.L", "LowerArm.L", 0.6, 0.058], ["LowerLeg.R", "LowerLeg.R_end", 0.45, 0.066], ["LowerLeg.L", "LowerLeg.L_end", 0.45, 0.066], ["Abdomen", "Torso", 0.7, 0.17]].forEach(function (q) {
+      var b = findBone(m, q[0]), c = findNode(m, q[1]); if (!b || !c) return;
+      var ws = b.getWorldScale(new THREE.Vector3()).x || 1;
+      var dir = c.position.clone(), len = dir.length(); if (len < 1e-6) return; dir.normalize();
+      var ring = new THREE.Mesh(new THREE.CylinderGeometry(q[3], q[3], 0.045, 14, 1, true), REFL);
+      ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+      ring.position.copy(dir.multiplyScalar(len * q[2]));
+      ring.scale.setScalar(1 / ws);
+      b.add(ring);
+    });
+  }
   var FILES = { p1: "modelli/donna2.glb", p2: "modelli/uomo.glb", istr: "modelli/donna.glb", manichino: "modelli/uomo.glb" };
   function clipOf(gltf, re) { return gltf.animations.filter(function (a) { return re.test(a.name); })[0]; }
 
@@ -659,7 +700,9 @@
       rooms.forEach(function (r, ri) {
         r.slots.forEach(function (sl, si) {
           var gltf = byFile[FILES[sl.role]];
-          var m = prepPerson(gltf, LOOKS[sl.role]);
+          var soc = r.s.divise === "soccorso" && sl.role !== "istr";
+          var m = prepPerson(gltf, soc ? LOOKS[sl.role + "S"] : LOOKS[sl.role]);
+          if (soc) addBands(m);
           sl.group.remove(sl.ph); sl.group.add(m); sl.model = m;
           var mx = new THREE.AnimationMixer(m);
           var clip = clipOf(gltf, /Idle/) || gltf.animations[0];
@@ -690,7 +733,8 @@
           var mx = new THREE.AnimationMixer(m), c = clipOf(file, /Sitting/) || seated;
           if (c) { var a = mx.clipAction(c); a.play(); a.time = c.duration * 0.62; a.timeScale = 0; }
           mx.update(0.001); mixers.push(mx);
-          if (f.kind === "regia" && k === 0) f.operator = { group: gp, model: m, rig: rigOf(m) };
+          mx.__static = true; // seduti: posa fissa, si aggiorna solo all'inizio
+          if (f.kind === "regia" && k === 0) f.operator = { group: gp, model: m, rig: rigOf(m), mixer: mx };
         });
       });
       (function () {
@@ -699,7 +743,7 @@
         var mx = new THREE.AnimationMixer(m), c = clipOf(gs[0], /Idle/);
         if (c) mx.clipAction(c).play();
         mx.update(0.001); mixers.push(mx);
-        LAB.workerRig = { group: gp, model: m, rig: rigOf(m) };
+        LAB.workerRig = { group: gp, model: m, rig: rigOf(m), mixer: mx };
       })();
       var nW = lite ? 1 : 2;
       for (var k = 0; k < nW; k++) {
@@ -708,7 +752,7 @@
         var mx = new THREE.AnimationMixer(m), c = clipOf(file, /Walk/);
         if (c) mx.clipAction(c).play();
         mx.update(0.001); mixers.push(mx);
-        walkers.push({ g: gp, lane: k ? 0.45 : -0.45, phase: k ? 0.55 : 0.05, speed: k ? 0.95 : 1.1 });
+        walkers.push({ g: gp, mixer: mx, lane: k ? 0.45 : -0.45, phase: k ? 0.55 : 0.05, speed: k ? 0.95 : 1.1 });
       }
     }).catch(function (e) { if (window.console) console.warn("modelli persone:", e); });
   }
@@ -788,17 +832,28 @@
     r.mannequin.updateMatrixWorld(true);
     // metà inferiore dello sterno: poco sopra l'osso «Torso», in superficie
     var a = wp(r.mBones.torso), b = wp(r.mBones.neck);
-    var ab = r.mBones.abd ? wp(r.mBones.abd) : a; var c = b.clone().lerp(ab, 0.42); c.y = r.group.position.y + 0.92; return c;
+    var ab = r.mBones.abd ? wp(r.mBones.abd) : a; var c = b.clone().lerp(ab, 0.42); c.y = r.group.position.y + (r.extra ? 0.27 : 0.92); return c;
   }
   function headPoint(r) {
     if (!r.mBones || !r.mBones.head) return r.group.localToWorld(new THREE.Vector3(-0.95, 0.85, -0.35));
     var h = wp(r.mBones.head); h.y += 0.12; return h;
   }
-  function screenPoint(r) { var p = wp(r.dev); p.y += r.s.posto === "dito" ? 0.06 : 0.45; return p; }
+  function screenPoint(r) { var p = wp(r.dev); p.y += r.s.posto === "dito" ? 0.06 : r.extra ? 0.32 : 0.45; return p; }
 
   // dove deve stare ciascuno, per stato (coordinate della sala)
   function slotGoal(r, k) {
     var st = r.state, sl = r.slots[k], bz = r.bed.position.z, bx = r.bed.position.x;
+    if (r.extra && k < 2) {
+      // a terra: la squadra lavora in ginocchio accanto al paziente
+      var pz = r.mannequinSlot.position.z, cl = local(r, chestPoint(r)), hl = local(r, headPoint(r));
+      if (k === 0) {
+        if (st === "fv") return { x: cl.x, z: pz + 0.62, rot: Math.PI, pose: "kcpr" };
+        if (st === "tachicardia" || st === "ipotensione" || st === "desat") return { x: cl.x + 0.15, z: pz + 0.62, rot: null, pose: "kpoint" };
+        return { x: cl.x + (st === "rosc" ? 0 : 0.2), z: pz + 0.66, rot: Math.PI, pose: "kneel" };
+      }
+      if (st === "fv" || st === "rosc" || st === "desat" || st === "recupero") return { x: hl.x - 0.5, z: pz, rot: Math.PI / 2, pose: "kairway" };
+      return { x: hl.x - 0.45, z: pz + 0.45, rot: Math.PI / 2 + 0.6, pose: "kneel" };
+    }
     if (k === 0) {
       if (st === "fv" || st === "rosc") {
         var c = local(r, chestPoint(r));
@@ -822,6 +877,26 @@
   function yawTo(sl, r, target) { var p = wp(sl.group), d = target.clone().sub(p); return Math.atan2(d.x, d.z); }
   function angLerp(a, b, k) { var d = ((b - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI; return a + d * k; }
 
+  // in ginocchio: cosce verticali, tibie a terra all'indietro, piedi dietro; la figura scende finché le ginocchia toccano terra
+  function kneel(sl, rig, fwd) {
+    var down = new THREE.Vector3(0, -1, 0), right = new THREE.Vector3(-fwd.z, 0, fwd.x), back = fwd.clone().negate();
+    sl.group.position.y = 0; sl.group.updateMatrixWorld(true);
+    ["R", "L"].forEach(function (sd) {
+      var sg = sd === "R" ? 1 : -1;
+      aim(rig["UpperLeg." + sd], down.clone().add(fwd.clone().multiplyScalar(0.12)).add(right.clone().multiplyScalar(0.1 * sg)));
+      aim(rig["LowerLeg." + sd], back.clone().add(down.clone().multiplyScalar(0.06)));
+    });
+    var kR = rig["LowerLeg.R"].b, kL = rig["LowerLeg.L"].b; if (!kR || !kL) return;
+    var ky = Math.min(wp(kR).y, wp(kL).y);
+    sl.group.position.y = -(ky - 0.075); sl.group.updateMatrixWorld(true);
+    if (sl.shadow) sl.shadow.position.y = 0.012 - sl.group.position.y;
+    ["R", "L"].forEach(function (sd) {
+      var f = rig["Foot." + sd], e = rig["LowerLeg." + sd].c; if (!f || !f.b || !e) return;
+      var ank = wp(e); f.b.parent.updateMatrixWorld(true);
+      f.b.position.copy(f.b.parent.worldToLocal(ank)); f.b.updateMatrixWorld(true);
+      aim(f, back.clone().add(down.clone().multiplyScalar(0.5)));
+    });
+  }
   function poseRoom(r, t, dt) {
     var mv = reduce ? 1 : Math.min(1, dt * 3);
     r.stepBox.visible = false;
@@ -835,9 +910,45 @@
       sl.cur.rot = angLerp(sl.cur.rot, rot, reduce ? 1 : Math.min(1, dt * 6));
       var arrived = dist - stepLen < 0.02;
       sl.group.position.set(sl.cur.x, 0, sl.cur.z); sl.group.rotation.y = sl.cur.rot;
+      if (sl.shadow) sl.shadow.position.y = 0.012;
       sl.model.rotation.x = 0;
       sl.group.updateMatrixWorld(true);
       var fwd = facing(sl);
+      if (g.pose.charAt(0) === "k" && g.pose !== "kcpr") sl.kcpr = null;
+      if (g.pose.charAt(0) === "k" && arrived) {
+        if (g.pose === "kcpr") {
+          // in ginocchio di fianco al torace: braccia tese e verticali, spalle sopra le mani, il movimento parte dalle anche
+          var c2 = chestPoint(r), len2 = armLen(rig);
+          if (!sl.kcpr) {
+            var best2 = null;
+            for (var dg = 6; dg <= 64; dg += 2) {
+              sl.mixer.update(0); sl.group.position.set(sl.cur.x, 0, sl.cur.z); sl.group.updateMatrixWorld(true);
+              kneel(sl, rig, fwd); lean(rig, fwd, dg, dg + 25);
+              var sR = wp(rig["UpperArm.R"].b), sL = wp(rig["UpperArm.L"].b), md = sR.add(sL).multiplyScalar(0.5);
+              var err = Math.abs((md.y - c2.y) - len2 * 0.97);
+              if (!best2 || err < best2.err) best2 = { err: err, deg: dg, dx: c2.x - md.x, dz: c2.z - md.z };
+            }
+            sl.kcpr = best2; sl.mixer.update(0);
+          }
+          sl.group.position.set(sl.cur.x + sl.kcpr.dx, 0, sl.cur.z + sl.kcpr.dz); sl.group.updateMatrixWorld(true);
+          var ph2 = reduce ? 0.5 : 0.5 - 0.5 * Math.cos(2 * Math.PI * 1.83 * t);
+          kneel(sl, rig, fwd);
+          lean(rig, fwd, sl.kcpr.deg + 4 * ph2, sl.kcpr.deg + 25);
+          var hand2 = c2.clone(); hand2.y -= 0.05 * ph2;
+          var across2 = new THREE.Vector3(fwd.z, -0.25, -fwd.x);
+          arm(rig, "R", hand2, across2); arm(rig, "L", hand2.clone().add(new THREE.Vector3(0, 0.03, 0)), across2);
+          r.compress = ph2;
+          return;
+        }
+        kneel(sl, rig, fwd);
+        if (g.pose === "kneel") { lean(rig, fwd, 14, 28); return; }
+        if (g.pose === "kpoint") { lean(rig, fwd, 10, 20); arm(rig, "R", screenPoint(r)); return; }
+        if (g.pose === "kairway") {
+          var hp2 = headPoint(r), side2 = new THREE.Vector3(-fwd.z, 0, fwd.x).multiplyScalar(0.13);
+          lean(rig, fwd, 30, 55); arm(rig, "R", hp2.clone().add(side2)); arm(rig, "L", hp2.clone().sub(side2)); return;
+        }
+      }
+      if (g.pose.charAt(0) === "k") return;
       if (g.pose === "cpr" && arrived) {
         // compressioni: braccia tese e verticali, mani al centro del torace, spalle sopra le mani; il movimento parte dalle anche
         var c = chestPoint(r), len = armLen(rig);
@@ -977,15 +1088,56 @@
     labels.appendChild(lb); LAB.btn = lb;
   })();
   // didascalie del metodo (non cliccabili)
-  var CAPS = [
-    { kind: "prebrief", t: "1 · Familiarizzazione", s: "conosci il dispositivo, poi lo scenario" },
-    { kind: "debrief", t: "3 · Debriefing", s: "dalla timeline alla riflessione" }
-  ];
-  CAPS.forEach(function (c) {
-    var e = el("p", "room-cap", "<b>" + esc(c.t) + "</b><span>" + esc(c.s) + "</span>");
-    labels.appendChild(e); c.el = e;
-    c.f = fixed.filter(function (f) { return f.kind === c.kind; })[0];
+  /* segnaposto piccoli sulla scena (desktop) e legenda sotto la tela: si aprono al passaggio, al focus o al primo tocco */
+  var DEB = fixed.filter(function (f) { return f.kind === "debrief"; })[0];
+  function W3(G, x, y, z) { return function () { return G.localToWorld(new THREE.Vector3(x, y, z)); }; }
+  var SPACES = [];
+  SPACES.push({ name: "1 · Familiarizzazione", tag: "", cap: "conosci il dispositivo, poi lo scenario", acc: "#46f2a0", obj: null,
+    at: function () { return new THREE.Vector3(corridor.userData.preX, 1.55, PLAN.zb - ROOM / 2 + 0.12); } });
+  rooms.forEach(function (r) {
+    SPACES.push({ name: "Sala «" + r.p.nome.replace(/^similFranz\s*/, "") + "»", tag: soon(r.p) ? "in arrivo" : "", cap: r.s.scena || "", acc: r.p.accento || "#46f2a0", obj: r,
+      at: r.front ? W3(r.group, 0.6, 1.45, -ROOM / 2) : W3(r.group, 1.2, 1.45, ROOM / 2) });
   });
+  SPACES.push({ name: "Sala regia", tag: "regia web", cap: "dietro il vetro, le regie web dei dispositivi", acc: "#8fb6d8", obj: REG, at: W3(REG.group, REG.w / 2 - 0.8, 1.45, -ROOM / 2) });
+  if (DEB) SPACES.push({ name: "3 · Debriefing", tag: "", cap: "dalla timeline alla riflessione", acc: "#c9a6ff", obj: null, at: W3(DEB.group, DEB.w / 2 - 0.9, 1.45, -ROOM / 2) });
+  SPACES.push({ name: "Laboratorio", tag: "come nasce", cap: "come nasce uno strumento similFranz", acc: "#e0b070", obj: LAB, at: W3(LAB.group, -0.4, 1.45, -ROOM / 2) });
+  var legend = document.getElementById("sale-legend");
+  var openSp = null;
+  function openPin(sp, on) {
+    if (on) {
+      if (openSp && openSp !== sp) openSp.pin.classList.remove("open");
+      openSp = sp; sp.pin.classList.add("open"); hover = sp.obj || null;
+    } else if (openSp === sp) { sp.pin.classList.remove("open"); openSp = null; hover = null; }
+  }
+  SPACES.forEach(function (sp) {
+    var lbl = esc(sp.name) + (sp.tag ? " <small>" + esc(sp.tag) + "</small>" : "") + (sp.obj ? "" : '<em>' + esc(sp.cap) + "</em>");
+    var b = el("button", "pin" + (sp.obj ? "" : " pin-info"), '<span class="pd" aria-hidden="true"></span><span class="pl">' + lbl + "</span>");
+    b.type = "button"; b.style.setProperty("--acc", sp.acc);
+    b.setAttribute("aria-label", sp.obj ? (sp.name + (sp.tag ? ", " + sp.tag : "") + ": entra") : (sp.name + ": " + sp.cap));
+    b.addEventListener("mouseenter", function () { openPin(sp, true); });
+    b.addEventListener("mouseleave", function () { if (document.activeElement !== b) openPin(sp, false); });
+    b.addEventListener("focus", function () { openPin(sp, true); });
+    b.addEventListener("blur", function () { openPin(sp, false); });
+    b.addEventListener("click", function () {
+      // primo tocco apre, secondo entra (col mouse è già aperto dal passaggio)
+      if (!b.classList.contains("open")) { openPin(sp, true); return; }
+      if (sp.obj) enter(sp.obj);
+    });
+    labels.appendChild(b); sp.pin = b;
+    if (legend) {
+      var c = el("button", "chip" + (sp.obj ? "" : " chip-info"), '<span class="dot" aria-hidden="true"></span>' + esc(sp.name) + (sp.tag ? " <small>" + esc(sp.tag) + "</small>" : ""));
+      c.type = "button"; c.style.setProperty("--acc", sp.acc);
+      if (!sp.obj) c.title = sp.cap;
+      c.setAttribute("aria-label", sp.obj ? ("Entra: " + sp.name) : (sp.name + ": " + sp.cap));
+      c.addEventListener("mouseenter", function () { openPin(sp, true); });
+      c.addEventListener("mouseleave", function () { openPin(sp, false); });
+      c.addEventListener("focus", function () { openPin(sp, true); });
+      c.addEventListener("blur", function () { openPin(sp, false); });
+      c.addEventListener("click", function () { if (sp.obj) enter(sp.obj); });
+      legend.appendChild(c); sp.chip = c;
+    }
+  });
+  function spaceOf(obj) { for (var i = 0; i < SPACES.length; i++) if (SPACES[i].obj === obj) return SPACES[i]; return null; }
   backBtn.addEventListener("click", function () { leave(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && selected) leave(); });
 
@@ -1055,50 +1207,59 @@
 
   /* ---------- puntatore ---------- */
   var ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), hover = null;
+  var PICK = null;
   function pick(ev) {
-    var rc = canvas.getBoundingClientRect();
-    mouse.x = ((ev.clientX - rc.left) / rc.width) * 2 - 1; mouse.y = -((ev.clientY - rc.top) / rc.height) * 2 + 1;
+    mouse.x = ((ev.clientX - CR.left) / CR.width) * 2 - 1; mouse.y = -((ev.clientY - CR.top) / CR.height) * 2 + 1;
     ray.setFromCamera(mouse, camera);
-    var targets = [];
-    rooms.forEach(function (r) { targets.push(r.instrHit, r.devHit, r.hit); });
-    targets.push(REG.hit, LAB.hit);
-    var hits = ray.intersectObjects(targets, false);
+    if (!PICK) { PICK = []; rooms.forEach(function (r) { PICK.push(r.instrHit, r.devHit, r.hit); }); PICK.push(REG.hit, LAB.hit); }
+    var hits = ray.intersectObjects(PICK, false);
     return hits.length ? hits[0].object : null;
+  }
+  var lastTip = "";
+  function setTip(txt, ev) {
+    if (txt !== lastTip) { tip.textContent = txt; lastTip = txt; }
+    if (tip.hidden) tip.hidden = false;
+    tip.style.transform = "translate(" + Math.round(Math.min(CR.width - 20, ev.clientX - CR.left + 14)) + "px," + Math.round(ev.clientY - CR.top + 14) + "px)";
   }
   function blisterHit(ev) {
     if (!blister) return false;
-    var rc = canvas.getBoundingClientRect();
-    mouse.x = ((ev.clientX - rc.left) / rc.width) * 2 - 1; mouse.y = -((ev.clientY - rc.top) / rc.height) * 2 + 1;
+    mouse.x = ((ev.clientX - CR.left) / CR.width) * 2 - 1; mouse.y = -((ev.clientY - CR.top) / CR.height) * 2 + 1;
     ray.setFromCamera(mouse, camera);
     try { return !!blister.hit(ray); } catch (e) { return false; }
   }
-  canvas.addEventListener("pointermove", function (ev) {
+  // il puntatore salva solo le coordinate: il test si fa una volta per fotogramma, se il mouse si è mosso
+  var CR = { left: 0, top: 0, width: 1, height: 1 };
+  function readRect() { var r0 = canvas.getBoundingClientRect(); CR.left = r0.left; CR.top = r0.top; CR.width = r0.width || 1; CR.height = r0.height || 1; }
+  var PTR = { x: 0, y: 0, moved: false, inside: false, cx: 0, cy: 0 };
+  canvas.addEventListener("pointermove", function (ev) { PTR.cx = ev.clientX; PTR.cy = ev.clientY; PTR.moved = true; PTR.inside = true; }, { passive: true });
+  function pointerTick() {
+    if (!PTR.moved) return; PTR.moved = false;
+    var ev = { clientX: PTR.cx, clientY: PTR.cy };
+    hoverAt(ev);
+  }
+  function hoverAt(ev) {
     if (blisterHit(ev)) {
       hover = null; canvas.style.cursor = "pointer";
-      var rc0 = canvas.getBoundingClientRect();
-      tip.textContent = blister.label(); tip.hidden = false;
-      tip.style.left = Math.min(rc0.width - 20, ev.clientX - rc0.left + 14) + "px"; tip.style.top = (ev.clientY - rc0.top + 14) + "px";
-      kick(); return;
+      setTip(blister.label(), ev); return;
     }
     var o = pick(ev), h = null, txt = "";
     if (o) {
       if (o.userData.device) { h = o.userData.device; txt = h.p.nome; }
       else if (o.userData.instructor) { h = o.userData.instructor; txt = selected === h ? "Istruttore: tocca per il prossimo cue" : "Sala «" + h.p.nome.replace(/^similFranz\s*/, "") + "»"; }
-      else if (o.userData.room && !selected) { h = o.userData.room; txt = "Entra nella sala «" + h.p.nome.replace(/^similFranz\s*/, "") + "»"; }
-      else if (o.userData.regia && !selected) { h = REG; txt = "Entra nella sala regia"; }
-      else if (o.userData.lab && !selected) { h = LAB; txt = "Entra nel laboratorio"; }
+      else if (o.userData.room && !selected) { h = o.userData.room; txt = ""; }
+      else if (o.userData.regia && !selected) { h = REG; txt = ""; }
+      else if (o.userData.lab && !selected) { h = LAB; txt = ""; }
     }
+    if (h !== hover) { var spH = h ? spaceOf(h) : null; if (spH && !selected) openPin(spH, true); else if (openSp && !(openSp.pin === document.activeElement)) openPin(openSp, false); }
     hover = h;
     canvas.style.cursor = h ? "pointer" : "default";
     if (h && txt) {
-      var rc = canvas.getBoundingClientRect();
-      tip.textContent = txt; tip.hidden = false;
-      tip.style.left = Math.min(rc.width - 20, ev.clientX - rc.left + 14) + "px"; tip.style.top = (ev.clientY - rc.top + 14) + "px";
-    } else tip.hidden = true;
-    kick();
-  });
-  canvas.addEventListener("pointerleave", function () { hover = null; tip.hidden = true; kick(); });
+      setTip(txt, ev);
+    } else if (!tip.hidden) { tip.hidden = true; lastTip = ""; }
+  }
+  canvas.addEventListener("pointerleave", function () { PTR.inside = false; PTR.moved = false; hover = null; tip.hidden = true; }, { passive: true });
   canvas.addEventListener("click", function (ev) {
+    readRect();
     if (blisterHit(ev)) { blister.poke(); kick(); return; }
     var o = pick(ev); if (!o) return;
     if (o.userData.instructor && selected === o.userData.instructor) { var r = selected; act(r, (r.step + 1) % (r.s.azioni || [1]).length); return; }
@@ -1110,47 +1271,25 @@
   var tmpV = new THREE.Vector3();
   function placeLabels() {
     var W = canvas.clientWidth, H = canvas.clientHeight;
-    if (W < 860) { rooms.forEach(function (r) { r.btn.style.transform = ""; }); REG.btn.style.transform = ""; LAB.btn.style.transform = ""; CAPS.forEach(function (c) { c.el.style.transform = ""; }); return; }
+    if (W < 860) return; // telefono: lista di bottoni sotto la tela
     var boxes = [];
-    rooms.forEach(function (r) {
-      // sale dietro il corridoio: davanti alla porta; sale davanti: sul bordo verso chi guarda
-      if (r.front) tmpV.set(-0.3, 0, ROOM / 2).add(r.group.position);
-      else tmpV.set(0, 0, ROOM / 2 + 0.5).add(r.group.position);
-      tmpV.project(camera);
-      var w = r.btn.offsetWidth || 200, h = r.btn.offsetHeight || 34;
-      boxes.push({ e: r.btn, w: w, h: h, x: (tmpV.x + 1) / 2 * W, y: (1 - tmpV.y) / 2 * H + (r.front ? 6 + h / 2 : 0) });
+    SPACES.forEach(function (sp) {
+      var v = sp.at(); v.project(camera);
+      boxes.push({ sp: sp, w: 30, h: 30, x: (v.x + 1) / 2 * W, y: (1 - v.y) / 2 * H });
     });
-    (function () {
-      SELF.forEach(function (f) {
-        tmpV.set(0, 0, ROOM / 2).add(f.group.position); tmpV.project(camera);
-        var w = f.btn.offsetWidth || 160, h = f.btn.offsetHeight || 34;
-        boxes.push({ e: f.btn, w: w, h: h, x: (tmpV.x + 1) / 2 * W, y: (1 - tmpV.y) / 2 * H + 6 + h / 2 });
-      });
-    })();
-    CAPS.forEach(function (c) {
-      if (c.kind === "prebrief") tmpV.set(corridor.userData.preX, 0, PLAN.zb + ROOM / 2 + 0.3);
-      else if (c.f) tmpV.set(0, 0, ROOM / 2).add(c.f.group.position);
-      else return;
-      tmpV.project(camera);
-      var w = c.el.offsetWidth || 160, h = c.el.offsetHeight || 40;
-      boxes.push({ e: c.el, w: w, h: h, x: (tmpV.x + 1) / 2 * W, y: (1 - tmpV.y) / 2 * H + (c.kind === "prebrief" ? 0 : 6 + h / 2) });
-    });
-    for (var k = 0; k < 30; k++) {
+    for (var k = 0; k < 20; k++) {
       var moved = false;
       for (var a = 0; a < boxes.length; a++) for (var b = a + 1; b < boxes.length; b++) {
         var A = boxes[a], B = boxes[b];
-        var ox = (A.w + B.w) / 2 + 10 - Math.abs(A.x - B.x), oy = (A.h + B.h) / 2 + 8 - Math.abs(A.y - B.y);
-        if (ox > 0 && oy > 0) {
-          var up = A.y <= B.y ? A : B, dn = up === A ? B : A;
-          up.y -= oy / 2; dn.y += oy / 2; moved = true;
-        }
+        var ox = 34 - Math.abs(A.x - B.x), oy = 34 - Math.abs(A.y - B.y);
+        if (ox > 0 && oy > 0) { if (ox < oy) { var l = A.x <= B.x ? A : B, rr = l === A ? B : A; l.x -= ox / 2; rr.x += ox / 2; } else { var u = A.y <= B.y ? A : B, d = u === A ? B : A; u.y -= oy / 2; d.y += oy / 2; } moved = true; }
       }
       if (!moved) break;
     }
     boxes.forEach(function (q) {
-      q.x = Math.max(q.w / 2 + 6, Math.min(W - q.w / 2 - 6, q.x));
-      q.y = Math.max(q.h / 2 + 6, Math.min(H - q.h / 2 - 6, q.y));
-      q.e.style.transform = "translate(" + Math.round(q.x) + "px," + Math.round(q.y) + "px) translate(-50%, -50%)";
+      q.x = Math.max(22, Math.min(W - 22, q.x)); q.y = Math.max(22, Math.min(H - 22, q.y));
+      q.sp.pin.style.transform = "translate(" + Math.round(q.x) + "px," + Math.round(q.y) + "px)";
+      q.sp.pin.classList.toggle("flip", q.x > W - 300);
     });
   }
 
@@ -1219,14 +1358,14 @@
       glowAt(corridor, f.group.position.x + doorX, CW / 2 - 0.5, 1.6, 1.0, hex, 0.3);
     });
     // ombre morbide sotto letti, carrelli, banchi e tavoli
-    rooms.forEach(function (r) { shadowAt(r.group, r.bed.position.x, r.bed.position.z, 2.6, 1.4); if (r.s.posto !== "dito") shadowAt(r.group, -1.15, -1.65, 1.1, 0.8); });
+    rooms.forEach(function (r) { shadowAt(r.group, r.bed.position.x, r.bed.position.z, 2.6, 1.4); if (r.s.posto !== "dito" && !r.extra) shadowAt(r.group, -1.15, -1.65, 1.1, 0.8); if (r.extra) shadowAt(r.group, 0.95, -1.25, 0.8, 0.6); });
     fixed.forEach(function (f) {
       if (f.kind === "regia") shadowAt(f.group, -0.3, -1.5, 3.4, 1.0);
       if (f.kind === "debrief") shadowAt(f.group, 0.3, 0.2, 3.2, 2.2);
       if (f.kind === "lab") { shadowAt(f.group, -f.w / 2 + 0.5, 0.3, 1.1, 3.6); shadowAt(f.group, 0.9, 1.6, 1.4, 0.9); shadowAt(f.group, 1.2, -1.85, 2.0, 0.7); }
     });
     // ombra sotto ogni persona
-    rooms.forEach(function (r) { r.slots.forEach(function (sl) { shadowAt(sl.group, 0, 0, 0.75, 0.75); }); });
+    rooms.forEach(function (r) { r.slots.forEach(function (sl) { sl.shadow = shadowAt(sl.group, 0, 0, 0.75, 0.75); }); });
   })();
   function personShadow(gp) { shadowAt(gp, 0, 0, 0.7, 0.7); }
 
@@ -1252,6 +1391,33 @@
     if (PLAN.f0 - PLAN.x0 > 1.5) marks.push([(PLAN.x0 + PLAN.f0) / 2 + 0.6, CW / 2 - 0.3]);
     return { corridor: line, stops: stops, marks: marks.map(function (m) { return { x: m[0], z: m[1] }; }) };
   }
+  /* geometria statica (pareti, pavimenti, arredi) fusa per materiale: da ~600 a poche decine di draw call */
+  (function mergeStatic() {
+    var U = THREE.BufferGeometryUtils; if (!U || !U.mergeBufferGeometries) return;
+    root.updateMatrixWorld(true);
+    var byMat = {}, order = [];
+    root.traverse(function (o) {
+      if (!o.isMesh || o.isSkinnedMesh || !o.geometry || !o.geometry.index) return;
+      if (!o.material || Array.isArray(o.material) || o.material.visible === false) return;
+      for (var a = o; a && a !== root; a = a.parent) if (a.userData.dyn) return;
+      if (o.userData.room || o.userData.regia || o.userData.lab || o.userData.device || o.userData.instructor) return;
+      var k = o.material.uuid; if (!byMat[k]) { byMat[k] = []; order.push(k); } byMat[k].push(o);
+    });
+    order.forEach(function (k) {
+      var list = byMat[k]; if (list.length < 2) return;
+      var geos = list.map(function (o) {
+        var g = o.geometry.clone(); g.applyMatrix4(o.matrixWorld);
+        ["uv2", "color"].forEach(function (n) { if (g.attributes[n]) g.deleteAttribute(n); });
+        return g;
+      });
+      var ok = geos.every(function (g) { return g.attributes.position && g.attributes.normal && g.attributes.uv; });
+      if (!ok) return;
+      var merged = U.mergeBufferGeometries(geos, false); if (!merged) return;
+      var m = new THREE.Mesh(merged, list[0].material); m.renderOrder = list[0].renderOrder; m.matrixAutoUpdate = false; m.updateMatrix();
+      root.add(m);
+      list.forEach(function (o) { o.parent.remove(o); });
+    });
+  })();
   var BL_PATHS = blisterPaths();
   var blister = null;
   try {
@@ -1264,7 +1430,7 @@
   var tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3();
   function updateLink(r) {
     var a = r.regia.getWorldPosition(tmpA), b = r.dev.getWorldPosition(tmpB);
-    b.y += r.s.posto === "dito" ? 0.1 : 0.45;
+    b.y += r.s.posto === "dito" ? 0.1 : r.extra ? 0.32 : 0.45;
     r.group.worldToLocal(a); r.group.worldToLocal(b);
     var pos = r.link.geometry.attributes.position, n = pos.count;
     r.linkPhase = (r.linkPhase || 0) + (reduce ? 0 : (0.25 + r.pulse * 1.2) * lastDt);
@@ -1283,7 +1449,48 @@
       w.g.rotation.y = fwdDir ? Math.PI / 2 : -Math.PI / 2;
     });
   }
+  /* ---------- misure: __sale.perf() e, con ?perf=1, un riquadro a schermo ---------- */
+  var PF = { n: 0, sum: 0, worst: 0, gap: 0, gapWorst: 0, mix: 0, pose: 0, scr: 0, ren: 0, lab: 0, calls: 0, tris: 0, mixUpd: 0, t0: performance.now() };
+  function pfReset() { PF.n = PF.sum = PF.worst = PF.gap = PF.gapWorst = PF.mix = PF.pose = PF.scr = PF.ren = PF.lab = PF.mixUpd = 0; PF.t0 = performance.now(); }
+  function perfReport() {
+    var n = Math.max(1, PF.n), secs = (performance.now() - PF.t0) / 1000;
+    return { frames: PF.n, fps: +(PF.n / Math.max(0.001, secs)).toFixed(1), cpuMsAvg: +(PF.sum / n).toFixed(2), cpuMsWorst: +PF.worst.toFixed(2),
+      gapMsAvg: +(PF.gap / n).toFixed(1), gapMsWorst: +PF.gapWorst.toFixed(1),
+      msMixers: +(PF.mix / n).toFixed(2), msPose: +(PF.pose / n).toFixed(2), msScreens: +(PF.scr / n).toFixed(2), msRender: +(PF.ren / n).toFixed(2), msLabels: +(PF.lab / n).toFixed(2),
+      mixersPerFrame: +(PF.mixUpd / n).toFixed(1), mixersTotal: mixers.length, drawCalls: PF.calls, triangles: PF.tris,
+      pixelRatio: renderer.getPixelRatio(), level: typeof QL !== "undefined" ? QL.level : null };
+  }
+  var perfBox = null;
+  if (/[?&]perf=1/.test(location.search)) { perfBox = document.createElement("pre"); perfBox.style.cssText = "position:fixed;right:8px;bottom:8px;z-index:99;margin:0;padding:8px 10px;background:rgba(0,0,0,.8);color:#9f9;font:11px/1.35 monospace;border-radius:8px;pointer-events:none"; document.body.appendChild(perfBox); setInterval(function () { perfBox.textContent = JSON.stringify(perfReport(), null, 1); }, 1000); }
+  /* qualità adattiva: se il fotogramma medio supera ~22 ms per 2 s si scende di un gradino; si risale dopo 10 s stabili */
+  var QL = { level: window.innerWidth < 700 ? 2 : 0, acc: 0, n: 0, t: 0, good: 0,
+    pr: function () { return this.level >= 1 ? 1 : PR_MAX; },
+    groupsPerFrame: function () { return this.level >= 2 ? 1 : 2; },
+    screenHz: function () { return this.level >= 3 ? 6 : 11; } };
+  function qualityTick(gap) {
+    if (reduce || !gap) return;
+    QL.acc += gap; QL.n++; QL.t += gap;
+    if (QL.t < 2000) return;
+    var avg = QL.acc / QL.n; QL.acc = QL.n = QL.t = 0;
+    if (avg > 22 && QL.level < 4) { QL.level++; QL.good = 0; renderer.setPixelRatio(Math.min(DPR, QL.pr())); }
+    else if (avg < 17) { QL.good += 2; if (QL.good >= 10 && QL.level > (window.innerWidth < 700 ? 2 : 0)) { QL.level--; QL.good = 0; renderer.setPixelRatio(Math.min(DPR, QL.pr())); } }
+    else QL.good = 0;
+  }
+  // gruppi animati: ogni sala, la regia, il laboratorio; in vista d'insieme si aggiornano a turno, in una sala solo la sua
+  var turn = 0, screenAcc = 1, fixedAcc = 1, lastCamKey = "";
+  function tickRoom(r, dt) {
+    r.acc = (r.acc || 0) + dt;
+    if (!r.due) return;
+    var d = Math.min(0.12, r.acc); r.acc = 0; r.due = false;
+    var _pb = performance.now();
+    r.slots.forEach(function (sl) { if (sl.mixer) { sl.mixer.update(reduce ? 0 : d); PF.mixUpd++; } });
+    PF.mix += performance.now() - _pb; _pb = performance.now();
+    poseRoom(r, clock, d);
+    PF.pose += performance.now() - _pb;
+  }
   function frame(now) {
+    var _pf0 = performance.now(), _pb;
+    if (prev) { var gp = now - prev; PF.gap += gp; if (gp > PF.gapWorst) PF.gapWorst = gp; qualityTick(gp); }
     raf = 0;
     var dt = prev ? Math.min(0.05, (now - prev) / 1000) : 0.016; prev = now; lastDt = dt;
     if (!reduce) clock += dt;
@@ -1291,12 +1498,25 @@
     ["tx", "ty", "tz", "half", "az"].forEach(function (key) { cam[key] += (camGoal[key] - cam[key]) * k; });
     applyCam();
     var moving = Math.abs(cam.half - camGoal.half) > 0.002 || Math.abs(cam.tx - camGoal.tx) > 0.002 || Math.abs(cam.tz - camGoal.tz) > 0.002;
-    mixers.forEach(function (m) { m.update(reduce ? 0 : dt); });
+    scrollTick();
+    pointerTick();
+    // chi si anima in questo fotogramma
+    var groups = rooms.concat([REG, LAB]);
+    if (selected) groups.forEach(function (g) { g.due = g === selected; });
+    else { var gpf = QL.groupsPerFrame(); for (var q = 0; q < gpf; q++) { groups[turn % groups.length].due = true; turn++; } }
+    if (needs) groups.forEach(function (g) { g.due = true; });
+    _pb = performance.now();
+    walkers.forEach(function (w) { if (w.mixer) { w.mixer.update(reduce ? 0 : dt); PF.mixUpd++; } });
+    PF.mix += performance.now() - _pb; _pb = performance.now();
     updateWalkers(clock);
-    poseOperator(clock);
+    // regia e laboratorio: posa procedurale solo quando tocca a loro
+    REG.acc = (REG.acc || 0) + dt; LAB.acc = (LAB.acc || 0) + dt;
+    if (REG.due) { poseOperator(clock); REG.due = false; REG.acc = 0; }
+    if (LAB.due) { if (LAB.workerRig && LAB.workerRig.mixer) { LAB.workerRig.mixer.update(reduce ? 0 : Math.min(0.12, LAB.acc)); PF.mixUpd++; } updateLab(clock); LAB.due = false; LAB.acc = 0; }
+    else updateLabPrinter(clock);
     updateTrails(dt);
-    updateLab(clock);
     if (blister) blister.update(dt, clock);
+    PF.pose += performance.now() - _pb;
     SELF.forEach(function (F) {
       var rsel = selected === F, rhov = hover === F;
       var rt = selected ? (rsel ? 1.7 : 0.12) : (rhov ? 1.0 : 0.45);
@@ -1304,29 +1524,34 @@
       F.edgeMat.opacity = selected ? (rsel ? 0.9 : 0.1) : (rhov ? 0.85 : 0.35);
       if (F.floor.material.userData.base) F.floor.material.color.copy(F.floor.material.userData.base).multiplyScalar(selected && !rsel ? 0.5 : 1);
     });
-    screenTick++;
-    var draw = needs || reduce || screenTick % 2 === 0;
+    // schermi: 11 volte al secondo, solo quelli che si vedono
+    screenAcc += dt; fixedAcc += dt;
+    var draw = needs || reduce || screenAcc >= 1 / QL.screenHz();
+    if (draw) screenAcc = 0;
     rooms.forEach(function (r, i) {
       var sel = selected === r, hov = hover === r;
-      var breathe = reduce ? 1 : 1 + 0.12 * Math.sin(clock * 0.9 + i * 1.7); // le luci delle sale pulsano piano
+      var breathe = reduce ? 1 : 1 + 0.12 * Math.sin(clock * 0.9 + i * 1.7);
       var target = (selected ? (sel ? 1.6 : 0.12) : (hov ? 1.1 : 0.6)) * breathe;
       r.lamp.intensity += (target - r.lamp.intensity) * (reduce ? 1 : Math.min(1, dt * 5));
       r.edgeMat.opacity = selected ? (sel ? 0.9 : 0.12) : (hov ? 0.85 : 0.4);
       if (r.floor.material.userData.base) r.floor.material.color.copy(r.floor.material.userData.base).multiplyScalar(selected && !sel ? 0.5 : 1);
-      r.plates.forEach(function (pl) { pl.mat.color.copy(pl.base).multiplyScalar(0.75 + 0.25 * breathe); });
+      for (var pi = 0; pi < r.plates.length; pi++) r.plates[pi].mat.color.copy(r.plates[pi].base).multiplyScalar(0.75 + 0.25 * breathe);
       r.flash = Math.max(0, r.flash - dt * 1.2); r.pulse = Math.max(0, r.pulse - dt * 0.8);
-      poseRoom(r, clock, dt);
+      tickRoom(r, dt);
       updateLink(r);
       r.linkMat.opacity = selected && !sel ? 0.2 : 0.95;
-      if (draw) {
+      if (draw && (!selected || sel)) {
+        _pb = performance.now();
         if (r.s.schermo === "spo2") drawSpo2(r.screen.ctx, 160, 240, r.state, clock);
         else drawMonitor(r.screen.ctx, 320, 200, r.state, clock);
         r.screen.tex.needsUpdate = true; if (r.screen.texGlb) r.screen.texGlb.needsUpdate = true;
-        drawRegia(r.regiaScreen.ctx, 128, 96, r.p.accento || "#46f2a0", r.flash);
-        r.regiaScreen.tex.needsUpdate = true;
+        if (r.flash > 0 || r.regiaDirty !== false) { drawRegia(r.regiaScreen.ctx, 128, 96, r.p.accento || "#46f2a0", r.flash); r.regiaScreen.tex.needsUpdate = true; r.regiaDirty = r.flash > 0; }
+        PF.scr += performance.now() - _pb;
       }
     });
-    if (draw && (needs || screenTick % 6 === 0)) {
+    _pb = performance.now();
+    // schermi fissi: mini-regie e familiarizzazione una volta; timeline 2 volte al secondo; codice del laboratorio 6
+    if (needs || !fixedDrawn) {
       fixed.forEach(function (f) {
         f.screens.forEach(function (ws, j) {
           var c = ws.sm.ctx, cw = ws.sm.canvas.width, chh = ws.sm.canvas.height;
@@ -1337,40 +1562,61 @@
           ws.sm.tex.needsUpdate = true;
         });
       });
-      drawCode(LAB.code.ctx, 256, 170, clock); LAB.code.tex.needsUpdate = true;
       var pre = corridor.userData.screen;
-      if (!pre.drawn) { drawPrebrief(pre.sm.ctx, 320, 180); pre.sm.tex.needsUpdate = true; pre.drawn = true; }
-      var sb = reduce ? 1 : 0.8 + 0.2 * Math.sin(clock * 0.6);
+      drawPrebrief(pre.sm.ctx, 320, 180); pre.sm.tex.needsUpdate = true;
+      fixedDrawn = true;
+    }
+    if (!reduce && fixedAcc >= 1 / 6) {
+      fixedAcc = 0;
+      if (!selected || selected === LAB) { drawCode(LAB.code.ctx, 256, 170, clock); LAB.code.tex.needsUpdate = true; }
+      tlAcc++;
+      if (tlAcc % 3 === 0 && (!selected)) fixed.forEach(function (f) { f.screens.forEach(function (ws) { if (ws.kind === "timeline") { drawTimeline(ws.sm.ctx, ws.sm.canvas.width, ws.sm.canvas.height, clock); ws.sm.tex.needsUpdate = true; } }); });
+      var sb = 0.8 + 0.2 * Math.sin(clock * 0.6);
       corridor.userData.strip.color.setRGB(0.17 * sb, 0.44 * sb, 0.48 * sb);
     }
-    renderer.render(scene, camera);
-    placeLabels();
+    PF.scr += performance.now() - _pb;
+    _pb = performance.now(); renderer.render(scene, camera); PF.ren += performance.now() - _pb;
+    PF.calls = renderer.info.render.calls; PF.tris = renderer.info.render.triangles;
+    // etichette: solo quando la camera si muove o cambia qualcosa
+    _pb = performance.now();
+    var ck = cam.tx.toFixed(3) + cam.tz.toFixed(3) + cam.half.toFixed(3) + cam.az.toFixed(3);
+    if (needs || ck !== lastCamKey || labelsDirty) { placeLabels(); lastCamKey = ck; labelsDirty = false; }
+    PF.lab += performance.now() - _pb;
     needs = false;
+    var _pt = performance.now() - _pf0; PF.n++; PF.sum += _pt; if (_pt > PF.worst) PF.worst = _pt;
     if (!reduce && visible && !document.hidden) raf = requestAnimationFrame(frame);
     else if (reduce && moving) raf = requestAnimationFrame(frame);
   }
+  var fixedDrawn = false, tlAcc = 0, labelsDirty = true;
+  function markLabels() { labelsDirty = true; }
   function kick() { needs = true; if (!raf) raf = requestAnimationFrame(frame); }
 
   function resize() {
     var W = canvas.clientWidth, H = canvas.clientHeight;
     renderer.setSize(W, H, false);
-    if (W < 700) renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+    renderer.setPixelRatio(Math.min(DPR, QL.pr()));
+    readRect();
     layout();
     camGoal = selected ? roomGoal(selected) : overviewGoal();
     cam = Object.assign({}, camGoal);
     kick();
   }
   window.addEventListener("resize", resize);
-  window.addEventListener("scroll", function () {
+  // scroll: solo una bandierina; l'orbita lenta si calcola nel fotogramma
+  var scrollPending = false;
+  window.addEventListener("scroll", function () { scrollPending = true; if (!raf && visible) raf = requestAnimationFrame(frame); }, { passive: true });
+  function scrollTick() {
+    if (!scrollPending) return; scrollPending = false;
+    readRect();
     if (reduce || selected) return;
-    var rc = box.getBoundingClientRect(), vh = window.innerHeight;
-    var prog = Math.max(-1, Math.min(1, (vh / 2 - (rc.top + rc.height / 2)) / vh));
+    var vh = window.innerHeight, br = box.getBoundingClientRect();
+    var prog = Math.max(-1, Math.min(1, (vh / 2 - (br.top + br.height / 2)) / vh));
     scrollAz = prog * 0.22;
     camGoal = overviewGoal();
-    kick();
-  }, { passive: true });
+  }
   if ("IntersectionObserver" in window) {
     new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) kick(); }, { rootMargin: "100px" }).observe(box);
+    new IntersectionObserver(function (es) { window.__saleInVista = es[0].intersectionRatio > 0.45; }, { threshold: [0, 0.45, 0.6, 1] }).observe(box);
   } else visible = true;
   document.addEventListener("visibilitychange", function () { if (!document.hidden) kick(); });
   canvas.addEventListener("webglcontextlost", function (e) { e.preventDefault(); fallback(); box.classList.remove("is-3d"); });
@@ -1387,6 +1633,6 @@
     var rq = q[1] === "regia" ? REG : q[1] === "laboratorio" ? LAB : rooms.filter(function (r) { return r.p.id === q[1]; })[0];
     if (rq) setTimeout(function () { box.scrollIntoView({ block: "center", behavior: "instant" }); enter(rq); }, 50);
   }
-  window.__sale = { rooms: rooms, fixed: fixed, enter: enter, leave: leave, act: act, blisterPaths: BL_PATHS, getBlister: function () { return blister; },
+  window.__sale = { rooms: rooms, fixed: fixed, enter: enter, leave: leave, act: act, perf: perfReport, perfReset: pfReset, blisterPaths: BL_PATHS, getBlister: function () { return blister; },
     view: function (g, el) { if (el != null) EL = el; camGoal = Object.assign({}, cam, g); cam = Object.assign({}, camGoal); kick(); } };
 })();

@@ -55,7 +55,7 @@ Rispetta «riduci movimento» del sistema, ha una versione statica quando WebGL 
    `descrizione`, `stato` (`"disponibile"` o `"in arrivo"`), `pagina` (la Pages del progetto: è l'unico link verso il
    progetto), `doi` (facoltativo), `immagine`, `alt`, `accento` (colore), `regia_web` (facoltativo: una frase sulla regia web del dispositivo, che compare nella
    sala regia del centro; senza, il progetto non ha la sua riga) e `sala` con `posto` (`"dito"` o `"carrello"`),
-   `schermo` (`"spo2"` o `"monitor"`), `regia` (`"telefono"`, `"ipad"`, `"pocket"`, `"tablet"`), `scena` e 2-3 `azioni`
+   `schermo` (`"spo2"` o `"monitor"`), `ambiente` (facoltativo: `"extraospedaliero"` per il soccorso a terra, senza letto) e `divise` (facoltativo: `"soccorso"` per divise generiche ad alta visibilità), `regia` (`"telefono"`, `"ipad"`, `"pocket"`, `"tablet"`), `scena` e 2-3 `azioni`
    dell'istruttore. Gli stati disponibili sono descritti in testa al file.
 2. **Metti l'immagine** in `img/`: JPEG largo circa 1200 px, sotto i 200 KB, senza EXIF né GPS.
 3. **Facoltativo: il modello 3D** in `modelli/` come GLB leggero (pochi migliaia di triangoli, un materiale per colore,
