@@ -145,6 +145,9 @@ h3{font:700 1.4rem/1.15 var(--display);margin:0 0 8px;letter-spacing:-.01em}
   background:rgba(5,10,16,.72);border:1px dashed rgba(160,210,230,.25);font:500 .78rem/1.25 var(--body);color:var(--muted);white-space:nowrap;transition:opacity .3s}
 .room-cap b{font:600 .86rem/1.1 var(--display);color:#dfe8ef}
 .sale.inside .room-cap{opacity:0}
+.lab-steps{margin:2px 0 0;padding-left:20px;display:grid;gap:5px;font-size:.81rem;color:#d3dee5;line-height:1.38}
+.lab-steps li::marker{color:var(--acc);font-weight:700}
+.lab-steps b{color:var(--ink)}
 .regia-list{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:8px}
 .regia-list li{--acc:var(--green);padding-left:12px;border-left:3px solid var(--acc);font-size:.85rem;color:#d3dee5;line-height:1.35}
 .regia-list li b{display:block;font:600 .92rem/1.2 var(--display);color:var(--ink)}
@@ -158,8 +161,8 @@ h3{font:700 1.4rem/1.15 var(--display);margin:0 0 8px;letter-spacing:-.01em}
 .sale:not(.inside) .sale-side{visibility:hidden;transition:opacity .3s,transform .3s,visibility 0s .3s}
 .back{align-self:flex-start;padding:10px 14px;font-size:.92rem;background:rgba(5,10,16,.9)}
 .sale-panel{--acc:var(--green);flex:1;overflow:auto;background:rgba(8,14,22,.93);border:1px solid var(--line);border-top:3px solid var(--acc);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px}
-.sale-panel h3{margin:2px 0 0}
-.sale-panel p{margin:0;color:#d3dee5;font-size:.95rem}
+.sale-panel h3{margin:2px 0 0;font-size:1.22rem}
+.sale-panel p{margin:0;color:#d3dee5;font-size:.9rem}
 .sale-panel .device{font-size:.76rem}
 .act{border-top:1px solid var(--line);padding-top:12px;margin-top:2px}
 .act-h{font:600 .8rem/1.3 var(--mono)!important;color:var(--acc)!important;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px!important}
@@ -300,7 +303,7 @@ footer .copy{color:var(--ink);margin-top:20px}
           <div id="sale-fallback-list" class="room-cards"></div>
         </div>
       </div>
-      <p class="sale-hint">Tocca una sala o la regia per entrare. In sala, tocca l'istruttore o i bottoni per dare il prossimo cue.</p>
+      <p class="sale-hint">Tocca una sala, la regia o il laboratorio per entrare. In sala, tocca l'istruttore o i bottoni per dare il prossimo cue.</p>
     </div>
     <div class="wrap">
       <p class="offline reveal"><b>Collegati ovunque.</b> Monitor e controller si parlano direttamente: li accendi e sei in scenario, in sala, in reparto o in palestra. Il saturimetro si collega all'hotspot del tuo telefono. E dove c'è un Wi-Fi® che copre la sala, dal computer apri le regie web dei monitor. Nelle sale, la scia di luce fra l'istruttore e il dispositivo è questo collegamento.</p>
@@ -689,6 +692,7 @@ footer .copy{color:var(--ink);margin-top:20px}
   if (!document.hidden) start();
 })();
 </script>
+<script src="blister.js"></script>
 <script src="sale.js"></script>
 </body>
 </html>

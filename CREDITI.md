@@ -26,6 +26,14 @@ I tablet e l'iPod dentro i gusci sono lastre semplici con uno schermo disegnato 
 Letti, carrelli, piantane, sedie, tavolo, banco della regia, pareti di vetro e schermi sono forme semplici costruite
 direttamente nel codice della pagina (`sale.js`): nessun modello esterno.
 
+Il laboratorio (banco, portatile, stampante 3D stilizzata, saldatore, cassettiera, scaffale) è costruito nel codice; sullo
+scaffale ci sono i gusci similFranz già presenti in `modelli/`. Pavimenti, riflessi dei vetri, luci e ombre sono texture
+generate dalla pagina, senza immagini esterne.
+
+## Blister
+
+Blister, il bovaro dell'Appenzell del centro, è ispirato al cane dell'autore (modulo `blister.js`).
+
 ## Librerie e caratteri
 
 - [three.js](https://threejs.org/) r128, con `GLTFLoader` e `SkeletonUtils` dagli esempi ufficiali: licenza MIT, © three.js authors.

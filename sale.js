@@ -12,6 +12,15 @@
   function doiHTML(p) { return p.doi ? '<p class="doi">DOI <a href="https://doi.org/' + esc(p.doi) + '">' + esc(p.doi) + "</a></p>" : ""; }
   function enterHTML(p) { return '<a class="btn primary enter" href="' + esc(p.pagina) + '">Entra nel progetto →</a>' + (soon(p) ? '<p class="note">La pagina si accende con la pubblicazione.</p>' : ""); }
 
+  var LAB_STEPS = [["Un bisogno della sala, un dispositivo dismesso.", "Si parte da che cosa serve allo scenario e da un iPad, un iPod o un tablet fermo in un cassetto: riuso, non acquisto."], ["Il codice con Claude Code.", "Scrivo il codice con Claude Code, l'assistente di programmazione di Anthropic: io decido che cosa serve, provo tutto sui dispositivi veri, accetto o scarto."], ["Test e revisioni.", "Ogni correzione ha il suo test automatico (oltre mille nel monitor per Android). Le revisioni con ruoli specialistici sono simulate dall'IA: aiutano a trovare errori, non sostituiscono professionisti reali né una validazione."], ["Il guscio.", "Lo disegno, lo provo al computer (stabilità, montabilità) e lo stampo in 3D in casa."], ["Tutto aperto.", "Codice GPL-3.0, modelli 3D CC BY-NC 4.0, guide, DOI su Zenodo dove c'è. Copia, adatta, migliora; Claude Code può guidarti nell'installazione."]];
+  function labHTML(withTitle) {
+    return "<h3>Laboratorio · come nasce uno strumento similFranz</h3>" +
+      '<ol class="lab-steps">' + LAB_STEPS.map(function (s) { return "<li><b>" + esc(s[0]) + "</b> " + esc(s[1]) + "</li>"; }).join("") + "</ol>" +
+      "<p>Prendi il metodo e usalo per il tuo centro.</p>" +
+      '<div class="links"><a class="btn primary enter" href="#ecosistema">Scopri l\'ecosistema</a></div>' +
+      '<p class="note">Claude™ è un marchio di Anthropic, PBC. Progetto indipendente.</p>';
+  }
+
   /* ---------- schede dell'ecosistema ---------- */
   var cards = document.getElementById("cards");
   if (cards) {
@@ -49,6 +58,10 @@
       (rw ? '<ul class="regia-list">' + rw + "</ul>" : "") + '<p class="note">Ogni regia web guida il proprio dispositivo: le apri in schede diverse dello stesso browser. La portata dipende dalla rete del posto: prova il collegamento prima del corso.</p>' +
       '<div class="links"><a class="btn primary enter" href="#ecosistema">Scopri l\'ecosistema</a></div>';
     fb.appendChild(rc);
+    var lc = el("article", "room-card");
+    lc.style.setProperty("--acc", "#e0b070");
+    lc.innerHTML = labHTML(false);
+    fb.appendChild(lc);
   }
 
   /* emersione delle schede (anche quelle appena generate) */
@@ -168,7 +181,7 @@
   var lite = window.innerWidth < 700; // telefono: meno figure
 
   /* ---------- il centro di simulazione: sale dei progetti su un corridoio comune ---------- */
-  var ROOM = 5, CW = 2.6, GAP = 0.2, W_REGIA = 4.2, W_DEBRIEF = 5, PRE = 3.4;
+  var ROOM = 5, CW = 2.6, GAP = 0, W_REGIA = 4.2, W_DEBRIEF = 5, W_LAB = 5, PRE = 3.4, LOW = 0.32;
   var rooms = [], fixed = [], walkers = [];
   var root = new THREE.Group(); scene.add(root);
 
@@ -179,6 +192,8 @@
     return { canvas: c, ctx: c.getContext("2d"), tex: tex, mat: m };
   }
   function boxMesh(w, h, d, m) { return new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); }
+  // parete «tagliata» sui lati verso chi guarda: chiude la stanza senza nasconderla (spezzato isometrico)
+  function lowWall(G, x, z, lx, lz) { var w = boxMesh(lx, LOW, lz, M.wall); w.position.set(x, LOW / 2, z); G.add(w); var t = boxMesh(lx + 0.001, 0.02, lz + 0.001, M.trim); t.position.set(x, LOW + 0.01, z); G.add(t); return w; }
   function personPlaceholder(color) {
     var gp = new THREE.Group();
     var body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.2, 1.25, 10), std(color)); body.position.y = 0.62; gp.add(body);
@@ -228,6 +243,7 @@
     for (var i = 0; i < n; i++) (i < nb ? back : front).push({ type: "room", i: i, w: ROOM });
     front.unshift({ type: "regia", w: W_REGIA });
     front.push({ type: "debrief", w: W_DEBRIEF });
+    front.push({ type: "lab", w: W_LAB });
     function place(row, z) {
       var tot = row.reduce(function (s, it) { return s + it.w; }, 0) + GAP * (row.length - 1), x = -tot / 2;
       row.forEach(function (it) { it.x = x + it.w / 2; it.z = z; x += it.w + GAP; });
@@ -236,7 +252,7 @@
     var zb = -(CW / 2 + ROOM / 2), zf = CW / 2 + ROOM / 2;
     var tb = place(back, zb), tf = place(front, zf);
     var half = Math.max(tb, tf) / 2;
-    return { back: back, front: front, x0: -half - PRE, x1: half + 0.3, zb: zb, zf: zf };
+    return { back: back, front: front, x0: -half - PRE, x1: half, zb: zb, zf: zf, f0: -tf / 2, f1: tf / 2, b1: tb / 2 };
   }
   var PLAN = plan();
 
@@ -260,6 +276,8 @@
       glassWall(G, ROOM, -ROOM / 2, 0.6, acc, r.plates);
     }
     r.edgeMat = edgeMat;
+    lowWall(G, ROOM / 2 - 0.06, 0, 0.12, ROOM);
+    if (front) lowWall(G, 0, ROOM / 2 - 0.06, ROOM, 0.12);
     // letto
     var bed = new THREE.Group(); bed.position.set(-0.2, 0, -0.35);
     var frame = boxMesh(2.1, 0.08, 0.95, M.bedFrame); frame.position.y = 0.5; bed.add(frame);
@@ -357,6 +375,7 @@
     f.lamp = new THREE.PointLight(0xdfeaff, 0.4, 6, 2); f.lamp.position.set(0, 2.6, -0.4); G.add(f.lamp);
     f.hit = boxMesh(slot.w, 2, ROOM, new THREE.MeshBasicMaterial({ visible: false })); f.hit.position.y = 1; f.hit.userData.regia = f; G.add(f.hit);
     f.pc = new THREE.Vector3(-0.3, 1.2, -1.6);
+    lowWall(G, slot.w / 2 - 0.06, 0, 0.12, ROOM); lowWall(G, 0, ROOM / 2 - 0.06, slot.w, 0.12);
     root.add(G); return f;
   }
   /* sala debriefing: tavolo, sedie, schermo con la timeline */
@@ -374,7 +393,85 @@
     f.seats = [{ x: 0.3, z: -0.42, rotY: 0 }, { x: -0.5, z: 0.82, rotY: Math.PI }, { x: 1.1, z: 0.82, rotY: Math.PI }];
     var ws = wallScreen(G, 1.5, 0.85, 384, 216); ws.frame.position.set(-slot.w / 2 + 0.1, 1.15, 0.2); ws.frame.rotation.y = Math.PI / 2;
     ws.kind = "timeline"; f.screens.push(ws);
+    lowWall(G, slot.w / 2 - 0.06, 0, 0.12, ROOM); lowWall(G, 0, ROOM / 2 - 0.06, slot.w, 0.12);
     root.add(G); return f;
+  }
+
+  /* laboratorio: dove nasce uno strumento similFranz */
+  function buildLab(slot) {
+    var G = new THREE.Group(); G.position.set(slot.x, 0, slot.z);
+    var f = { kind: "lab", group: G, w: slot.w, plates: [], screens: [], seats: [] };
+    var acc = new THREE.Color(0xe0b070), hw = slot.w / 2;
+    var floor = boxMesh(slot.w, 0.12, ROOM, M.floor.clone()); floor.position.y = -0.06; G.add(floor); f.floor = floor;
+    var w2 = boxMesh(0.12, 1.3, ROOM, M.wall); w2.position.set(-hw, 0.65, 0); G.add(w2);
+    glassWall(G, slot.w, -ROOM / 2, -0.4, acc, f.plates);
+    lowWall(G, hw - 0.06, 0, 0.12, ROOM); lowWall(G, 0, ROOM / 2 - 0.06, slot.w, 0.12);
+    f.edgeMat = new THREE.MeshBasicMaterial({ color: acc, transparent: true, opacity: 0.35 });
+    var e2 = boxMesh(0.03, 0.03, ROOM, f.edgeMat); e2.position.set(-hw + 0.06, 1.31, 0); G.add(e2);
+    // banco da lavoro lungo la parete
+    var bx = -hw + 0.5;
+    var bench = boxMesh(0.75, 0.06, 3.2, M.table); bench.position.set(bx, 0.9, 0.3); G.add(bench);
+    [[-0.3, -1.2], [0.3, -1.2], [-0.3, 1.8], [0.3, 1.8]].forEach(function (q) { var l = boxMesh(0.05, 0.88, 0.05, M.metal); l.position.set(bx + q[0], 0.44, q[1]); G.add(l); });
+    // portatile acceso con il codice che scorre
+    var lap = new THREE.Group(); lap.position.set(bx + 0.05, 0.94, -0.55); lap.rotation.y = Math.PI / 2; G.add(lap);
+    var base = boxMesh(0.36, 0.02, 0.25, std(0x2a2f36)); base.position.y = 0.01; lap.add(base);
+    var lid = new THREE.Group(); lid.position.set(0, 0.02, -0.12); lid.rotation.x = -0.25; lap.add(lid);
+    var lidB = boxMesh(0.36, 0.24, 0.012, std(0x2a2f36)); lidB.position.y = 0.12; lid.add(lidB);
+    var code = screenMat(256, 170); var cpl = new THREE.Mesh(new THREE.PlaneGeometry(0.33, 0.21), code.mat); cpl.position.set(0, 0.12, 0.008); lid.add(cpl);
+    f.code = code; f.laptopKeys = new THREE.Object3D(); f.laptopKeys.position.set(0, 0.03, 0.03); lap.add(f.laptopKeys);
+    // stampante 3D stilizzata: telaio aperto, piatto, pezzo che cresce
+    var pr = new THREE.Group(); pr.position.set(bx, 0.93, 0.75); pr.scale.setScalar(1.45); G.add(pr);
+    var fm = std(0x3a4450);
+    [[-0.24, -0.24], [0.24, -0.24], [-0.24, 0.24], [0.24, 0.24]].forEach(function (q) { var post = boxMesh(0.03, 0.62, 0.03, fm); post.position.set(q[0], 0.31, q[1]); pr.add(post); });
+    [[0, -0.24, 0.5, 0.03], [0, 0.24, 0.5, 0.03]].forEach(function (q) { var bar = boxMesh(q[2], q[3], q[3], fm); bar.position.set(0, 0.62, q[1]); pr.add(bar); });
+    var bed = boxMesh(0.4, 0.015, 0.4, std(0x22262b)); bed.position.y = 0.06; pr.add(bed);
+    var gantry = boxMesh(0.5, 0.025, 0.03, std(0x55606c)); pr.add(gantry);
+    var head = boxMesh(0.06, 0.06, 0.06, std(0x7c8894)); pr.add(head);
+    var nozzle = boxMesh(0.012, 0.025, 0.012, new THREE.MeshBasicMaterial({ color: 0xffa860, toneMapped: false })); head.add(nozzle); nozzle.position.y = -0.04;
+    var part = boxMesh(0.2, 0.12, 0.13, std(0x58b8b0)); part.position.y = 0.07; pr.add(part);
+    f.printer = { gantry: gantry, head: head, part: part, bedY: 0.0675 };
+    // saldatore sul supporto
+    var sold = new THREE.Group(); sold.position.set(bx + 0.1, 0.93, 1.45); G.add(sold);
+    var sb0 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.02, 12), std(0x2a2f36)); sb0.position.y = 0.01; sold.add(sb0);
+    var spring = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.13, 10, 1, true), M.metal); spring.position.set(0, 0.08, 0); spring.rotation.z = 0.7; sold.add(spring);
+    var iron = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.016, 0.24, 8), std(0x30363d)); iron.position.set(-0.03, 0.1, 0); iron.rotation.z = 0.7; sold.add(iron);
+    var tip = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.006, 0.05, 6), new THREE.MeshBasicMaterial({ color: 0xff8a4a, toneMapped: false })); tip.position.set(0.075, 0.03, 0); tip.rotation.z = 0.7; sold.add(tip);
+    // cassettiera con il cassetto aperto: dentro, vecchi tablet e iPod
+    var cab = new THREE.Group(); cab.position.set(0.9, 0, 1.55); G.add(cab);
+    var cbody = boxMesh(1.0, 0.72, 0.5, std(0x3b4b5c)); cbody.position.y = 0.36; cab.add(cbody);
+    var top2 = boxMesh(1.04, 0.03, 0.54, M.table); top2.position.y = 0.735; cab.add(top2);
+    var dr = new THREE.Group(); dr.position.set(0, 0.5, 0.42); cab.add(dr);
+    var dm = std(0x4c5e70);
+    var dbot = boxMesh(0.9, 0.02, 0.48, dm); dr.add(dbot);
+    [[0, 0.06, 0.23, 0.9, 0.12, 0.02], [0, 0.06, -0.23, 0.9, 0.12, 0.02], [-0.44, 0.06, 0, 0.02, 0.12, 0.48], [0.44, 0.06, 0, 0.02, 0.12, 0.48]].forEach(function (q) { var sd = boxMesh(q[3], q[4], q[5], dm); sd.position.set(q[0], q[1], q[2]); dr.add(sd); });
+    var knob = boxMesh(0.16, 0.025, 0.025, M.metal); knob.position.set(0, 0.07, 0.25); dr.add(knob);
+    [[-0.22, 0.24, 0.17, 0.1], [0.12, 0.2, 0.26, -0.15], [0.33, 0.07, 0.12, 0.3]].forEach(function (q, k) {
+      var dvc = new THREE.Group(); dvc.position.set(q[0], 0.025 + k * 0.012, -0.02); dvc.rotation.y = q[3]; dr.add(dvc);
+      var bd = boxMesh(q[1], 0.012, q[2], std(0x15181c)); dvc.add(bd);
+      var scr = boxMesh(q[1] * 0.85, 0.002, q[2] * 0.8, std(0x24303a, { roughness: 0.2 })); scr.position.y = 0.007; dvc.add(scr);
+    });
+    // scaffale con i gusci stampati
+    var sh = new THREE.Group(); sh.position.set(1.2, 0, -1.85); G.add(sh);
+    [0.02, 0.62, 1.18].forEach(function (y) { var bd = boxMesh(1.7, 0.03, 0.42, M.table); bd.position.y = y; sh.add(bd); });
+    [-0.83, 0.83].forEach(function (x) { var sd = boxMesh(0.03, 1.2, 0.42, M.table); sd.position.set(x, 0.6, 0); sh.add(sd); });
+    f.shelf = sh;
+    // la persona al banco
+    f.worker = { x: bx + 0.72, z: -0.55, rotY: -Math.PI / 2 };
+    f.lamp = new THREE.PointLight(0xffe6c4, 0.4, 6, 2); f.lamp.position.set(-0.3, 2.6, 0); G.add(f.lamp);
+    f.hit = boxMesh(slot.w, 2, ROOM, new THREE.MeshBasicMaterial({ visible: false })); f.hit.position.y = 1; f.hit.userData.lab = f; G.add(f.hit);
+    root.add(G); return f;
+  }
+  var CODE = ["// similFranz · cuore del simulatore", "function aggiornaTraccia(t) {", "  if (!sonda.collegata) return linea();", "  const fc = paziente.fc;", "  disegna(ecg(t, fc));", "}", "", "test('la SpO2 sparisce in arresto', () => {", "  avvia('FV');", "  atteso(spo2()).vuoto();", "});", "", "function scarica(joule) {", "  registro.annota('scarica', joule);", "  return esito.deciso(regia);", "}", "", "// guscio: verifica di montabilità", "const inserto = { d: 4.3, h: 6.5 };"];
+  function drawCode(ctx, W, H, t) {
+    ctx.fillStyle = "#0b1118"; ctx.fillRect(0, 0, W, H);
+    ctx.font = "500 11px monospace"; ctx.textAlign = "left";
+    var lh = 14, off = reduce ? 0 : (t * 9) % (CODE.length * lh);
+    for (var k = -1; k < H / lh + 2; k++) {
+      var y = k * lh - (off % lh) + 12, idx = (Math.floor(off / lh) + k + CODE.length) % CODE.length, line = CODE[idx];
+      ctx.fillStyle = /^\s*\/\//.test(line) ? "#5f7a8c" : /test|atteso/.test(line) ? "#46f2a0" : /function|const|return/.test(line) ? "#5fd4ff" : "#cfd8e3";
+      ctx.fillText(line, 8, y);
+    }
+    if (!reduce && Math.floor(t * 2) % 2 === 0) { ctx.fillStyle = "#46f2a0"; ctx.fillRect(8, H - 14, 7, 11); }
   }
 
   /* corridoio e angolo della familiarizzazione */
@@ -384,9 +481,17 @@
     var fl = boxMesh(len, 0.1, CW, M.corridor); fl.position.set(cx, -0.07, 0); corridor.add(fl);
     corridor.userData.strip = new THREE.MeshBasicMaterial({ color: 0x2b6f7a, toneMapped: false });
     var strip = boxMesh(len - 0.6, 0.012, 0.05, corridor.userData.strip); strip.position.set(cx, 0.0, 0); corridor.add(strip);
-    var endW = boxMesh(0.12, 1.3, CW + ROOM, M.wall); endW.position.set(PLAN.x0, 0.65, PLAN.zb / 2 + CW / 4 - 0.0); corridor.add(endW);
+    // testata del corridoio: dal fondo dell'angolo di familiarizzazione al bordo del corridoio, senza sporgere
+    var zA = PLAN.zb - ROOM / 2 - 0.06, zB = CW / 2;
+    var endW = boxMesh(0.12, 1.3, zB - zA, M.wall); endW.position.set(PLAN.x0 + 0.06, 0.65, (zA + zB) / 2); corridor.add(endW);
+    // lato del corridoio verso chi guarda, dove non ci sono stanze: parete tagliata
+    if (PLAN.f0 - PLAN.x0 > 0.05) lowWall(corridor, (PLAN.x0 + PLAN.f0) / 2, CW / 2 - 0.06, PLAN.f0 - PLAN.x0, 0.12);
+    if (PLAN.x1 - PLAN.f1 > 0.05) lowWall(corridor, (PLAN.f1 + PLAN.x1) / 2, CW / 2 - 0.06, PLAN.x1 - PLAN.f1, 0.12);
+    lowWall(corridor, PLAN.x1 - 0.06, 0, 0.12, CW);
+    if (PLAN.x1 - PLAN.b1 > 0.05) lowWall(corridor, PLAN.b1 + 0.06, PLAN.zb, 0.12, ROOM);
     // familiarizzazione: sedie in semicerchio davanti a un piccolo schermo
-    var px = PLAN.x0 + PRE / 2 + 0.1;
+    var px;
+    px = PLAN.x0 + PRE / 2;
     var floorP = boxMesh(PRE, 0.11, ROOM, M.floor); floorP.position.set(px, -0.065, PLAN.zb); corridor.add(floorP);
     var wb = boxMesh(PRE, 1.3, 0.12, M.wall); wb.position.set(px, 0.65, PLAN.zb - ROOM / 2); corridor.add(wb);
     var ws = wallScreen(corridor, 1.2, 0.7, 320, 180); ws.frame.position.set(px, 1.1, PLAN.zb - ROOM / 2 + 0.1);
@@ -398,11 +503,33 @@
   PLAN.back.concat(PLAN.front).forEach(function (it) {
     if (it.type === "room") rooms[it.i] = buildRoom(P[it.i], it.i, it);
     else if (it.type === "regia") fixed.push(buildRegia(it));
+    else if (it.type === "lab") fixed.push(buildLab(it));
     else fixed.push(buildDebrief(it));
   });
   function layout() { /* la pianta è fissa: si adatta la camera */ }
   var REG = fixed.filter(function (f) { return f.kind === "regia"; })[0];
   REG.kind = "regia"; REG.label = "Sala regia";
+  var LAB = fixed.filter(function (f) { return f.kind === "lab"; })[0];
+  var SELF = [REG, LAB]; // stanze fisse che si possono aprire
+  // stampante, codice e persona al banco del laboratorio
+  function updateLab(t) {
+    var pr = LAB.printer, cyc = reduce ? 0.6 : (t % 48) / 48, hgt = 0.006 + 0.12 * cyc;
+    pr.part.scale.y = hgt / 0.12; pr.part.position.y = pr.bedY + hgt / 2;
+    var gy = pr.bedY + hgt + 0.06; pr.gantry.position.set(0, gy, 0);
+    pr.head.position.set(reduce ? 0 : Math.sin(t * 3.1) * 0.09, gy, reduce ? 0 : Math.cos(t * 2.3) * 0.055);
+    var o = LAB.workerRig; if (!o || !o.rig) return;
+    o.group.updateMatrixWorld(true);
+    var fwd = new THREE.Vector3(Math.sin(o.group.rotation.y), 0, Math.cos(o.group.rotation.y)), right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+    var kb = LAB.laptopKeys.getWorldPosition(new THREE.Vector3()), down = new THREE.Vector3(0, -1, 0);
+    lean(o.rig, fwd, 14, 30);
+    aim(o.rig["UpperArm.R"], down.clone().multiplyScalar(0.85).add(fwd.clone().multiplyScalar(0.45)));
+    aim(o.rig["UpperArm.L"], down.clone().multiplyScalar(0.85).add(fwd.clone().multiplyScalar(0.45)));
+    var tr = reduce ? 0 : Math.max(0, Math.sin(t * 8)) * 0.025, tl = reduce ? 0 : Math.max(0, Math.sin(t * 8 + 2)) * 0.025;
+    var hr = kb.clone().add(right.clone().multiplyScalar(0.09)); hr.y += 0.02 + tr;
+    var hl = kb.clone().add(right.clone().multiplyScalar(-0.09)); hl.y += 0.02 + tl;
+    aimAt(o.rig["LowerArm.R"], hr); aimAt(o.rig["LowerArm.L"], hl);
+    aim(o.rig["Palm.R"], fwd.clone().add(down.clone().multiplyScalar(0.4))); aim(o.rig["Palm.L"], fwd.clone().add(down.clone().multiplyScalar(0.4)));
+  }
   // scie dal PC della regia verso i dispositivi delle sale: la rete Wi-Fi comune
   REG.trails = rooms.map(function (r) {
     var gq = new THREE.BufferGeometry(); gq.setAttribute("position", new THREE.BufferAttribute(new Float32Array(20 * 3), 3));
@@ -559,23 +686,44 @@
         f.seats.slice(0, max).forEach(function (st, k) {
           var file = [gs[0], gs[1], gs[2]][k % 3], look = [LOOKS.w2, LOOKS.d, LOOKS.w1][k % 3];
           var m = prepPerson(file, look);
-          var gp = new THREE.Group(); gp.position.set(st.x, 0, st.z); gp.rotation.y = st.rotY; gp.add(m); f.group.add(gp);
+          var gp = new THREE.Group(); gp.position.set(st.x, 0, st.z); gp.rotation.y = st.rotY; gp.add(m); f.group.add(gp); personShadow(gp);
           var mx = new THREE.AnimationMixer(m), c = clipOf(file, /Sitting/) || seated;
           if (c) { var a = mx.clipAction(c); a.play(); a.time = c.duration * 0.62; a.timeScale = 0; }
           mx.update(0.001); mixers.push(mx);
           if (f.kind === "regia" && k === 0) f.operator = { group: gp, model: m, rig: rigOf(m) };
         });
       });
+      (function () {
+        var w = LAB.worker, m = prepPerson(gs[0], LOOKS.w1);
+        var gp = new THREE.Group(); gp.position.set(w.x, 0, w.z); gp.rotation.y = w.rotY; gp.add(m); LAB.group.add(gp); personShadow(gp);
+        var mx = new THREE.AnimationMixer(m), c = clipOf(gs[0], /Idle/);
+        if (c) mx.clipAction(c).play();
+        mx.update(0.001); mixers.push(mx);
+        LAB.workerRig = { group: gp, model: m, rig: rigOf(m) };
+      })();
       var nW = lite ? 1 : 2;
       for (var k = 0; k < nW; k++) {
         var file = k ? gs[0] : gs[1], m = prepPerson(file, k ? LOOKS.w2 : LOOKS.w1);
-        var gp = new THREE.Group(); gp.add(m); corridor.add(gp);
+        var gp = new THREE.Group(); gp.add(m); corridor.add(gp); personShadow(gp);
         var mx = new THREE.AnimationMixer(m), c = clipOf(file, /Walk/);
         if (c) mx.clipAction(c).play();
         mx.update(0.001); mixers.push(mx);
         walkers.push({ g: gp, lane: k ? 0.45 : -0.45, phase: k ? 0.55 : 0.05, speed: k ? 0.95 : 1.1 });
       }
     }).catch(function (e) { if (window.console) console.warn("modelli persone:", e); });
+  }
+  function attachShells() {
+    if (!loader) return Promise.resolve();
+    var spots = [[-0.5, 0.64, 2.2], [0.35, 0.64, 1.3], [-0.2, 1.2, 1.3], [0.45, 1.2, 1.6]], k = 0;
+    return Promise.all(P.filter(function (p) { return p.sala && p.sala.modello; }).slice(0, 4).map(function (p) {
+      var sp = spots[k++];
+      return load(p.sala.modello).then(function (gltf) {
+        var m = gltf.scene.clone(true);
+        m.traverse(function (o) { if (o.isMesh) { o.material = o.material.clone(); if (/screen/i.test(o.name) || /screen/i.test(o.material.name)) o.material = std(0x0b0e12, { roughness: 0.3 }); } });
+        m.scale.setScalar(sp[2]); m.position.set(sp[0], sp[1] + 0.015, 0); m.rotation.y = -0.15;
+        LAB.shelf.add(m);
+      }).catch(function () {});
+    }));
   }
   function attachDevices() {
     if (!loader) return Promise.resolve();
@@ -821,6 +969,12 @@
     b.setAttribute("aria-label", "Entra nella sala regia: le regie web dei dispositivi");
     b.addEventListener("click", function () { enter(REG); });
     labels.appendChild(b); REG.btn = b;
+    var lb = el("button", "room-btn lab-btn");
+    lb.type = "button"; lb.style.setProperty("--acc", "#e0b070");
+    lb.innerHTML = '<span class="dot"></span>Laboratorio <small>come nasce</small>';
+    lb.setAttribute("aria-label", "Entra nel laboratorio: come nasce uno strumento similFranz");
+    lb.addEventListener("click", function () { enter(LAB); });
+    labels.appendChild(lb); LAB.btn = lb;
   })();
   // didascalie del metodo (non cliccabili)
   var CAPS = [
@@ -847,6 +1001,7 @@
   }
   function renderPanel(r) {
     if (r === REG) { panel.style.setProperty("--acc", "#8fb6d8"); panel.innerHTML = regiaHTML(); return; }
+    if (r === LAB) { panel.style.setProperty("--acc", "#e0b070"); panel.innerHTML = labHTML(true); return; }
     var p = r.p, s = r.s;
     panel.style.setProperty("--acc", p.accento || "#46f2a0");
     panel.innerHTML =
@@ -876,7 +1031,7 @@
     if (reduce) cam = Object.assign({}, camGoal);
     r.t0 = clock;
     clearTimeout(r.auto);
-    if (r !== REG && r.step < 0) r.auto = setTimeout(function () { if (selected === r) act(r, 0); }, reduce ? 0 : 1400);
+    if (SELF.indexOf(r) < 0 && r.step < 0) r.auto = setTimeout(function () { if (selected === r) act(r, 0); }, reduce ? 0 : 1400);
     backBtn.focus({ preventScroll: true });
     kick();
   }
@@ -906,17 +1061,32 @@
     ray.setFromCamera(mouse, camera);
     var targets = [];
     rooms.forEach(function (r) { targets.push(r.instrHit, r.devHit, r.hit); });
-    targets.push(REG.hit);
+    targets.push(REG.hit, LAB.hit);
     var hits = ray.intersectObjects(targets, false);
     return hits.length ? hits[0].object : null;
   }
+  function blisterHit(ev) {
+    if (!blister) return false;
+    var rc = canvas.getBoundingClientRect();
+    mouse.x = ((ev.clientX - rc.left) / rc.width) * 2 - 1; mouse.y = -((ev.clientY - rc.top) / rc.height) * 2 + 1;
+    ray.setFromCamera(mouse, camera);
+    try { return !!blister.hit(ray); } catch (e) { return false; }
+  }
   canvas.addEventListener("pointermove", function (ev) {
+    if (blisterHit(ev)) {
+      hover = null; canvas.style.cursor = "pointer";
+      var rc0 = canvas.getBoundingClientRect();
+      tip.textContent = blister.label(); tip.hidden = false;
+      tip.style.left = Math.min(rc0.width - 20, ev.clientX - rc0.left + 14) + "px"; tip.style.top = (ev.clientY - rc0.top + 14) + "px";
+      kick(); return;
+    }
     var o = pick(ev), h = null, txt = "";
     if (o) {
       if (o.userData.device) { h = o.userData.device; txt = h.p.nome; }
       else if (o.userData.instructor) { h = o.userData.instructor; txt = selected === h ? "Istruttore: tocca per il prossimo cue" : "Sala «" + h.p.nome.replace(/^similFranz\s*/, "") + "»"; }
       else if (o.userData.room && !selected) { h = o.userData.room; txt = "Entra nella sala «" + h.p.nome.replace(/^similFranz\s*/, "") + "»"; }
       else if (o.userData.regia && !selected) { h = REG; txt = "Entra nella sala regia"; }
+      else if (o.userData.lab && !selected) { h = LAB; txt = "Entra nel laboratorio"; }
     }
     hover = h;
     canvas.style.cursor = h ? "pointer" : "default";
@@ -929,9 +1099,10 @@
   });
   canvas.addEventListener("pointerleave", function () { hover = null; tip.hidden = true; kick(); });
   canvas.addEventListener("click", function (ev) {
+    if (blisterHit(ev)) { blister.poke(); kick(); return; }
     var o = pick(ev); if (!o) return;
     if (o.userData.instructor && selected === o.userData.instructor) { var r = selected; act(r, (r.step + 1) % (r.s.azioni || [1]).length); return; }
-    var r2 = o.userData.device || o.userData.instructor || o.userData.room || o.userData.regia;
+    var r2 = o.userData.device || o.userData.instructor || o.userData.room || o.userData.regia || o.userData.lab;
     if (r2 && selected !== r2) enter(r2);
   });
 
@@ -939,7 +1110,7 @@
   var tmpV = new THREE.Vector3();
   function placeLabels() {
     var W = canvas.clientWidth, H = canvas.clientHeight;
-    if (W < 860) { rooms.forEach(function (r) { r.btn.style.transform = ""; }); REG.btn.style.transform = ""; CAPS.forEach(function (c) { c.el.style.transform = ""; }); return; }
+    if (W < 860) { rooms.forEach(function (r) { r.btn.style.transform = ""; }); REG.btn.style.transform = ""; LAB.btn.style.transform = ""; CAPS.forEach(function (c) { c.el.style.transform = ""; }); return; }
     var boxes = [];
     rooms.forEach(function (r) {
       // sale dietro il corridoio: davanti alla porta; sale davanti: sul bordo verso chi guarda
@@ -950,9 +1121,11 @@
       boxes.push({ e: r.btn, w: w, h: h, x: (tmpV.x + 1) / 2 * W, y: (1 - tmpV.y) / 2 * H + (r.front ? 6 + h / 2 : 0) });
     });
     (function () {
-      tmpV.set(0, 0, ROOM / 2).add(REG.group.position); tmpV.project(camera);
-      var w = REG.btn.offsetWidth || 160, h = REG.btn.offsetHeight || 34;
-      boxes.push({ e: REG.btn, w: w, h: h, x: (tmpV.x + 1) / 2 * W, y: (1 - tmpV.y) / 2 * H + 6 + h / 2 });
+      SELF.forEach(function (f) {
+        tmpV.set(0, 0, ROOM / 2).add(f.group.position); tmpV.project(camera);
+        var w = f.btn.offsetWidth || 160, h = f.btn.offsetHeight || 34;
+        boxes.push({ e: f.btn, w: w, h: h, x: (tmpV.x + 1) / 2 * W, y: (1 - tmpV.y) / 2 * H + 6 + h / 2 });
+      });
     })();
     CAPS.forEach(function (c) {
       if (c.kind === "prebrief") tmpV.set(corridor.userData.preX, 0, PLAN.zb + ROOM / 2 + 0.3);
@@ -980,6 +1153,111 @@
       q.e.style.transform = "translate(" + Math.round(q.x) + "px," + Math.round(q.y) + "px) translate(-50%, -50%)";
     });
   }
+
+  /* ---------- finiture: pavimenti, pareti, porte, vetri, luce dalle stanze, ombre ---------- */
+  function canvasTex(w, h, draw) { var c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t; }
+  var TILE = canvasTex(256, 256, function (x, w, h) {
+    x.fillStyle = "#c8c8c8"; x.fillRect(0, 0, w, h);
+    var seed = 7; function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    for (var i = 0; i < 900; i++) { var g = 180 + Math.floor(rnd() * 50); x.fillStyle = "rgb(" + g + "," + g + "," + g + ")"; x.fillRect(rnd() * w, rnd() * h, 2, 2); }
+    x.strokeStyle = "rgba(255,255,255,.55)"; x.lineWidth = 3; x.strokeRect(1.5, 1.5, w - 3, h - 3);
+    x.strokeStyle = "rgba(0,0,0,.35)"; x.lineWidth = 2; x.strokeRect(5, 5, w - 10, h - 10);
+  });
+  function floorMat(hex, sx, sz) {
+    var t = TILE.clone(); t.needsUpdate = true; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(Math.max(1, sx / 1.25), Math.max(1, sz / 1.25));
+    var m = new THREE.MeshStandardMaterial({ color: hex, map: t, roughness: 0.9, metalness: 0 }); m.userData.base = new THREE.Color(hex); return m;
+  }
+  var RADIAL = canvasTex(128, 128, function (x, w, h) { var g = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = g; x.fillRect(0, 0, w, h); });
+  var SHADOW = canvasTex(128, 128, function (x, w, h) { var g = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); g.addColorStop(0, "rgba(0,0,0,.55)"); g.addColorStop(0.6, "rgba(0,0,0,.25)"); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(0, 0, w, h); });
+  var shadowMat = new THREE.MeshBasicMaterial({ map: SHADOW, transparent: true, depthWrite: false });
+  function shadowAt(G, x, z, sx, sz) { var m = new THREE.Mesh(new THREE.PlaneGeometry(sx, sz), shadowMat); m.rotation.x = -Math.PI / 2; m.position.set(x, 0.012, z); m.renderOrder = 1; G.add(m); return m; }
+  function glowAt(G, x, z, sx, sz, hex, op) {
+    var m = new THREE.Mesh(new THREE.PlaneGeometry(sx, sz), new THREE.MeshBasicMaterial({ map: RADIAL, color: hex, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+    m.rotation.x = -Math.PI / 2; m.position.set(x, 0.015, z); G.add(m); return m;
+  }
+  (function decor() {
+    // vetri con un riflesso leggero
+    M.glass.map = canvasTex(128, 128, function (x, w, h) {
+      x.fillStyle = "#6f8aa0"; x.fillRect(0, 0, w, h);
+      x.fillStyle = "rgba(255,255,255,.75)"; x.beginPath(); x.moveTo(w * 0.15, h); x.lineTo(w * 0.3, h); x.lineTo(w * 0.65, 0); x.lineTo(w * 0.5, 0); x.fill();
+      x.fillStyle = "rgba(255,255,255,.35)"; x.beginPath(); x.moveTo(w * 0.42, h); x.lineTo(w * 0.47, h); x.lineTo(w * 0.82, 0); x.lineTo(w * 0.77, 0); x.fill();
+    });
+    M.glass.opacity = 0.2; M.glass.color.set(0xb8dcff); M.glass.needsUpdate = true;
+    // pavimenti: stessa trama, colori diversi per zona
+    var tint = { room: 0x2a4050, corridor: 0x1f2c3a, regia: 0x243552, debrief: 0x302d4a, lab: 0x3a342d, pre: 0x283a4a };
+    rooms.forEach(function (r) { r.floor.material = floorMat(tint.room, ROOM, ROOM); });
+    fixed.forEach(function (f) {
+      var fl = f.floor; if (!fl) f.group.children.forEach(function (c) { if (!fl && c.geometry && c.geometry.parameters && c.geometry.parameters.height === 0.12) fl = c; });
+      if (fl) { fl.material = floorMat(tint[f.kind] || tint.room, f.w, ROOM); f.floor = fl; }
+    });
+    corridor.children.forEach(function (c) {
+      var p = c.geometry && c.geometry.parameters; if (!p) return;
+      if (p.height === 0.1) c.material = floorMat(tint.corridor, p.width, p.depth);
+      else if (p.height === 0.11) c.material = floorMat(tint.pre, p.width, p.depth);
+    });
+    // pareti: bordo superiore più chiaro e battiscopa
+    var capM = std(0x6a8196, { roughness: 0.6 }), baseM = std(0x0f161d);
+    M.wall.color.set(0x2a3b4d);
+    var walls = [];
+    root.traverse(function (o) { if (o.isMesh && o.material === M.wall && o.geometry.parameters && o.geometry.parameters.height >= 1) walls.push(o); });
+    walls.forEach(function (o) {
+      var p = o.geometry.parameters;
+      var cap = boxMesh(p.width + 0.02, 0.025, p.depth + 0.02, capM); cap.position.y = p.height / 2 - 0.0125; o.add(cap);
+      var bb = boxMesh(p.width + 0.03, 0.09, p.depth + 0.03, baseM); bb.position.y = -p.height / 2 + 0.045; o.add(bb);
+    });
+    // fascia guida nel corridoio con il colore di ogni sala, e la luce che esce dalle porte
+    rooms.forEach(function (r) {
+      var z = r.front ? CW / 2 - 0.35 : -CW / 2 + 0.35;
+      var g = boxMesh(ROOM - 0.8, 0.012, 0.07, new THREE.MeshBasicMaterial({ color: r.acc, transparent: true, opacity: 0.75, toneMapped: false }));
+      g.position.set(r.group.position.x, 0.0, z); corridor.add(g);
+      var dx = r.group.position.x + (r.front ? 0.6 : 1.2);
+      glowAt(corridor, dx, r.front ? CW / 2 - 0.5 : -CW / 2 + 0.5, 1.8, 1.1, 0xffd6a0, 0.32);
+    });
+    fixed.forEach(function (f) {
+      var doorX = f.kind === "regia" ? f.w / 2 - 0.8 : f.kind === "lab" ? -0.4 : f.w / 2 - 0.9;
+      var hex = f.kind === "regia" ? 0x9cc6ff : f.kind === "lab" ? 0xffcf8a : 0xc9a6ff;
+      glowAt(corridor, f.group.position.x + doorX, CW / 2 - 0.5, 1.6, 1.0, hex, 0.3);
+    });
+    // ombre morbide sotto letti, carrelli, banchi e tavoli
+    rooms.forEach(function (r) { shadowAt(r.group, r.bed.position.x, r.bed.position.z, 2.6, 1.4); if (r.s.posto !== "dito") shadowAt(r.group, -1.15, -1.65, 1.1, 0.8); });
+    fixed.forEach(function (f) {
+      if (f.kind === "regia") shadowAt(f.group, -0.3, -1.5, 3.4, 1.0);
+      if (f.kind === "debrief") shadowAt(f.group, 0.3, 0.2, 3.2, 2.2);
+      if (f.kind === "lab") { shadowAt(f.group, -f.w / 2 + 0.5, 0.3, 1.1, 3.6); shadowAt(f.group, 0.9, 1.6, 1.4, 0.9); shadowAt(f.group, 1.2, -1.85, 2.0, 0.7); }
+    });
+    // ombra sotto ogni persona
+    rooms.forEach(function (r) { r.slots.forEach(function (sl) { shadowAt(sl.group, 0, 0, 0.75, 0.75); }); });
+  })();
+  function personShadow(gp) { shadowAt(gp, 0, 0, 0.7, 0.7); }
+
+  /* ---------- Blister (modulo separato blister.js): aggancio ---------- */
+  function blisterPaths() {
+    var cx0 = PLAN.x0 + 0.8, cx1 = PLAN.x1 - 0.6, thr = CW / 2 - 0.05;
+    var doors = [], stops = [];
+    rooms.forEach(function (r) {
+      var gx = r.group.position.x, gz = r.group.position.z, p1 = r.slots[0].base;
+      if (!r.front) { doors.push([gx + 1.2, -thr]); stops.push({ x: gx + 0.75, z: gz + 1.55, lookX: gx + p1[0], lookZ: gz + p1[2], kind: "persona" }); }
+      else { doors.push([gx + 0.6, thr]); stops.push({ x: gx + 0.6, z: gz - 1.5, lookX: gx + p1[0], lookZ: gz + p1[2], kind: "persona" }); }
+    });
+    fixed.forEach(function (f) {
+      var gx = f.group.position.x, gz = f.group.position.z;
+      if (f.kind === "debrief") { doors.push([gx + f.w / 2 - 0.9, thr]); stops.push({ x: gx - 1.3, z: gz - 0.4, lookX: gx + 0.3, lookZ: gz - 0.42, kind: "persona" }); }
+      if (f.kind === "lab") { doors.push([gx - 0.4, thr]); stops.push({ x: gx - 0.55, z: gz - 1.1, lookX: gx + f.worker.x, lookZ: gz + f.worker.z, kind: "persona" }); }
+    });
+    doors.sort(function (a, b) { return a[0] - b[0]; });
+    var line = [[cx0, 0]];
+    doors.forEach(function (d) { line.push([d[0], 0], [d[0], d[1]], [d[0], 0]); });
+    line.push([cx1, 0]);
+    var marks = [[PLAN.x0 + 0.35, 0.3], [PLAN.x1 - 0.3, -0.3]];
+    if (PLAN.f0 - PLAN.x0 > 1.5) marks.push([(PLAN.x0 + PLAN.f0) / 2 + 0.6, CW / 2 - 0.3]);
+    return { corridor: line, stops: stops, marks: marks.map(function (m) { return { x: m[0], z: m[1] }; }) };
+  }
+  var BL_PATHS = blisterPaths();
+  var blister = null;
+  try {
+    blister = window.Blister ? window.Blister.attach({ THREE: THREE, scene: root, reduce: reduce, mobile: (canvas.clientWidth || window.innerWidth) < 860,
+      corridor: BL_PATHS.corridor, stops: BL_PATHS.stops, marks: BL_PATHS.marks, floorY: 0 }) : null;
+  } catch (e) { blister = null; if (window.console) console.warn("Blister:", e); }
 
   /* ---------- animazione ---------- */
   var lastDt = 0.016, clock = 0, raf = 0, prev = 0, visible = false, screenTick = 0, needs = true;
@@ -1017,11 +1295,15 @@
     updateWalkers(clock);
     poseOperator(clock);
     updateTrails(dt);
-    var rsel = selected === REG, rhov = hover === REG;
-    var rt = selected ? (rsel ? 1.7 : 0.12) : (rhov ? 1.0 : 0.45);
-    REG.lamp.intensity += (rt - REG.lamp.intensity) * (reduce ? 1 : Math.min(1, dt * 5));
-    REG.edgeMat.opacity = selected ? (rsel ? 0.9 : 0.1) : (rhov ? 0.85 : 0.35);
-    REG.floor.material.color.setHex(selected && !rsel ? 0x0e161e : 0x1a2632);
+    updateLab(clock);
+    if (blister) blister.update(dt, clock);
+    SELF.forEach(function (F) {
+      var rsel = selected === F, rhov = hover === F;
+      var rt = selected ? (rsel ? 1.7 : 0.12) : (rhov ? 1.0 : 0.45);
+      F.lamp.intensity += (rt - F.lamp.intensity) * (reduce ? 1 : Math.min(1, dt * 5));
+      F.edgeMat.opacity = selected ? (rsel ? 0.9 : 0.1) : (rhov ? 0.85 : 0.35);
+      if (F.floor.material.userData.base) F.floor.material.color.copy(F.floor.material.userData.base).multiplyScalar(selected && !rsel ? 0.5 : 1);
+    });
     screenTick++;
     var draw = needs || reduce || screenTick % 2 === 0;
     rooms.forEach(function (r, i) {
@@ -1030,7 +1312,7 @@
       var target = (selected ? (sel ? 1.6 : 0.12) : (hov ? 1.1 : 0.6)) * breathe;
       r.lamp.intensity += (target - r.lamp.intensity) * (reduce ? 1 : Math.min(1, dt * 5));
       r.edgeMat.opacity = selected ? (sel ? 0.9 : 0.12) : (hov ? 0.85 : 0.4);
-      r.floor.material.color.setHex(selected && !sel ? 0x0e161e : 0x1a2632);
+      if (r.floor.material.userData.base) r.floor.material.color.copy(r.floor.material.userData.base).multiplyScalar(selected && !sel ? 0.5 : 1);
       r.plates.forEach(function (pl) { pl.mat.color.copy(pl.base).multiplyScalar(0.75 + 0.25 * breathe); });
       r.flash = Math.max(0, r.flash - dt * 1.2); r.pulse = Math.max(0, r.pulse - dt * 0.8);
       poseRoom(r, clock, dt);
@@ -1055,6 +1337,7 @@
           ws.sm.tex.needsUpdate = true;
         });
       });
+      drawCode(LAB.code.ctx, 256, 170, clock); LAB.code.tex.needsUpdate = true;
       var pre = corridor.userData.screen;
       if (!pre.drawn) { drawPrebrief(pre.sm.ctx, 320, 180); pre.sm.tex.needsUpdate = true; pre.drawn = true; }
       var sb = reduce ? 1 : 0.8 + 0.2 * Math.sin(clock * 0.6);
@@ -1094,16 +1377,16 @@
 
   resize();
   var loading = document.getElementById("sale-loading");
-  Promise.all([attachDevices(), attachPeople()]).then(function () {
+  Promise.all([attachDevices(), attachPeople(), attachShells()]).then(function () {
     if (loading) loading.hidden = true;
     box.classList.add("loaded");
     kick();
   });
   var q = /[?&]sala=([\w-]+)/.exec(location.search);
   if (q) {
-    var rq = q[1] === "regia" ? REG : rooms.filter(function (r) { return r.p.id === q[1]; })[0];
+    var rq = q[1] === "regia" ? REG : q[1] === "laboratorio" ? LAB : rooms.filter(function (r) { return r.p.id === q[1]; })[0];
     if (rq) setTimeout(function () { box.scrollIntoView({ block: "center", behavior: "instant" }); enter(rq); }, 50);
   }
-  window.__sale = { rooms: rooms, fixed: fixed, enter: enter, leave: leave, act: act,
+  window.__sale = { rooms: rooms, fixed: fixed, enter: enter, leave: leave, act: act, blisterPaths: BL_PATHS, getBlister: function () { return blister; },
     view: function (g, el) { if (el != null) EL = el; camGoal = Object.assign({}, cam, g); cam = Object.assign({}, camGoal); kick(); } };
 })();

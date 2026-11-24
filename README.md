@@ -43,6 +43,7 @@ Niente router, niente internet, niente abbonamenti.
 | `sale.js` | il centro di simulazione isometrico (three.js): sale dei progetti, corridoio, regia, debriefing, e le schede |
 | `img/` | foto e rendering (JPEG sotto i 200 KB, senza dati EXIF) |
 | `modelli/` | modelli 3D in GLB: persone (CC0) e gusci dei dispositivi |
+| `blister.js` | Blister, il bovaro dell'Appenzell del centro (modulo separato: si aggancia a `sale.js` con `window.Blister.attach`; se manca, il centro funziona senza cane) |
 | `CREDITI.md` | autori e licenze dei modelli e delle librerie |
 
 La pagina usa solo three.js r128 (da cdnjs e jsdelivr, versione esatta) e tre caratteri di Google Fonts.
@@ -63,7 +64,9 @@ Rispetta «riduci movimento» del sistema, ha una versione statica quando WebGL 
 4. **Prova in locale**: dalla cartella dell'hub lancia `python3 -m http.server 8770` e apri http://127.0.0.1:8770/.
    Il centro di simulazione si riorganizza da solo: fino a 4 progetti le sale stanno tutte dietro il corridoio, con
    regia e debriefing di fronte; da 5 in su le sale si dividono sui due lati. La camera inquadra tutto e le etichette
-   si scostano per non sovrapporsi. Un link diretto a una sala: `?sala=<id>`; alla sala regia: `?sala=regia`.
+   si scostano per non sovrapporsi. Un link diretto a una sala: `?sala=<id>`; alla sala regia: `?sala=regia`; al laboratorio (come nasce uno strumento similFranz): `?sala=laboratorio`.
+   Blister, il bovaro dell'Appenzell del centro, è ispirato al cane dell'autore: gira per il corridoio, entra nelle sale
+   e nel laboratorio; il suo codice è in `blister.js`.
 5. Se il modello viene da fuori, scrivi titolo, autore, pagina, licenza e data in `CREDITI.md` e nel footer.
    Ammesse CC0, CC BY, CC BY-SA.
 
