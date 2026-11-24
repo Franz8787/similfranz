@@ -159,7 +159,7 @@
   function std(c, o) { var m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.85, metalness: 0 }); if (o) for (var k in o) m[k] = o[k]; return m; }
   var M = {
     floor: std(0x1a2632), wall: std(0x223140), trim: std(0x2e4050), bedFrame: std(0x6b7785), mattress: std(0xb8c6d3),
-    pillow: std(0xdfe7ee), cart: std(0x3a4654), cartTop: std(0x55626f), mannequin: std(0xe8708c, { roughness: 0.7 }), placeholder: std(0x7d8a96),
+    pillow: std(0xdfe7ee), cart: std(0x3a4654), cartTop: std(0x55626f), mannequin: std(0xd9967c, { roughness: 0.7 }), placeholder: std(0x7d8a96),
     corridor: std(0x16202b), metal: std(0x8a96a3, { roughness: 0.5 }), desk: std(0x2c3a48), chair: std(0x3b4b5c), table: std(0x4a5868),
     step: std(0x55636f),
     glass: new THREE.MeshStandardMaterial({ color: 0x9fd0ff, transparent: true, opacity: 0.13, roughness: 0.1, depthWrite: false }),
@@ -482,7 +482,7 @@
         o.frustumCulled = false;
         var mats = (Array.isArray(o.material) ? o.material : [o.material]).map(function (mt) { var c = mt.clone(); if (/Skin/i.test(mt.name)) skin = c.color; return c; });
         mats.forEach(function (c) {
-          if (look === "manichino") { c.color.set(0xe8708c); c.roughness = 0.7; c.metalness = 0; }
+          if (look === "manichino") { c.color.set(0xd9967c); c.roughness = 0.7; c.metalness = 0; }
           else if (/Shirt|Jacket/i.test(c.name)) c.color.set(look.top);
           else if (/Pants/i.test(c.name)) c.color.set(look.bottom);
           else if (/Shoe|Sock/i.test(c.name)) c.color.set(0x1c2026);
@@ -493,7 +493,7 @@
     });
     m.traverse(function (o) {
       if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach(function (c) {
-        if (FACE.some(function (f) { return c.name.indexOf(f) === 0; })) c.color.copy(look === "manichino" ? new THREE.Color(0xe8708c) : (skin || c.color));
+        if (FACE.some(function (f) { return c.name.indexOf(f) === 0; })) c.color.copy(look === "manichino" ? new THREE.Color(0xd9967c) : (skin || c.color));
       });
     });
     m.updateMatrixWorld(true);
