@@ -229,6 +229,20 @@ h3{font:700 1.4rem/1.15 var(--display);margin:0 0 8px;letter-spacing:-.01em}
 .step h3{margin-top:12px}
 .step p{margin:0;color:#d3dee5}
 
+/* sviluppo guidato dall'IA */
+.tk-top{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-bottom:26px}
+.tk-num{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px 22px}
+.tk-num b{display:block;font:700 clamp(1.7rem,3.4vw,2.5rem)/1.05 var(--display);color:var(--green)}
+.tk-num span{display:block;margin-top:10px;color:#d3dee5;font-size:.95rem}
+.tk-list{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;display:grid;gap:12px}
+.tk-row{display:grid;grid-template-columns:minmax(0,19rem) 1fr 4.6rem;gap:14px;align-items:center}
+.tk-name{color:#d3dee5;font-size:.95rem}
+.tk-bar{height:10px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden}
+.tk-bar i{display:block;height:100%;border-radius:6px;background:var(--green)}
+.tk-val{font:600 .9rem/1 var(--mono);text-align:right;color:#eef3f6;white-space:nowrap}
+.tk-note{margin-top:18px;color:#9fb0ba;font-size:.88rem;max-width:74ch}
+@media (max-width:760px){.tk-top{grid-template-columns:1fr}.tk-row{grid-template-columns:1fr 4.6rem}.tk-name{grid-column:1/-1}}
+
 /* chi */
 .who{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:30px}
 .mono-badge{width:84px;height:84px;border-radius:22px;display:grid;place-items:center;font:700 1.9rem/1 var(--display);color:#03140b;background:var(--green);box-shadow:0 0 40px rgba(70,242,160,.35)}
@@ -345,6 +359,21 @@ footer .copy{color:var(--ink);margin-top:20px}
         <div class="step reveal"><span class="n">02</span><h3>Scenario</h3><p>I partecipanti agiscono, tu faciliti. Dai il cue giusto al momento giusto, segui le loro decisioni, tieni lo scenario allineato agli obiettivi. Il registro lavora da solo.</p></div>
         <div class="step reveal"><span class="n">03</span><h3>Debriefing</h3><p>Parti dai fatti: tempi, scariche, azioni critiche. «Che cosa vi ha fatto riconoscere l'arresto?». I dati aprono la riflessione, il gruppo la costruisce.</p></div>
       </div>
+    </div>
+  </section>
+
+  <section id="ia" class="backdrop">
+    <div class="wrap">
+      <p class="kicker">Sviluppo guidato dall'IA</p>
+      <h2>Quanto lavoro c'è dentro, contato in token.</h2>
+      <p class="intro">similFranz è scritto con Claude Code, sotto la guida e la verifica dell'autore. Qui trovi il conto, misurato dai registri delle sessioni: un punto di partenza onesto per chi vuole stimare un progetto simile nel proprio centro.</p>
+      <div class="tk-top reveal">
+        <div class="tk-num"><b>96 milioni</b><span>di token nuovi, fra testo letto e testo scritto</span></div>
+        <div class="tk-num"><b>17.935</b><span>richieste al modello in 27 sessioni</span></div>
+        <div class="tk-num"><b>23 giorni</b><span>dal 2 al 24 novembre 2026</span></div>
+      </div>
+      <div class="tk-list reveal" role="group" aria-label="Token nuovi per filone di lavoro, in milioni"><div class="tk-row"><span class="tk-name">Monitor e controller per Android</span><span class="tk-bar"><i style="width:100.0%"></i></span><span class="tk-val">56,1 M</span></div><div class="tk-row"><span class="tk-name">Monitor per iPad</span><span class="tk-bar"><i style="width:27.1%"></i></span><span class="tk-val">15,2 M</span></div><div class="tk-row"><span class="tk-name">Gusci stampati in 3D</span><span class="tk-bar"><i style="width:15.5%"></i></span><span class="tk-val">8,7 M</span></div><div class="tk-row"><span class="tk-name">Pagine, repo e documentazione</span><span class="tk-bar"><i style="width:12.9%"></i></span><span class="tk-val">7,2 M</span></div><div class="tk-row"><span class="tk-name">CTG</span><span class="tk-bar"><i style="width:4.5%"></i></span><span class="tk-val">2,5 M</span></div><div class="tk-row"><span class="tk-name">Saturimetro su iPod touch</span><span class="tk-bar"><i style="width:3.4%"></i></span><span class="tk-val">2,0 M</span></div><div class="tk-row"><span class="tk-name">Controller per iPad</span><span class="tk-bar"><i style="width:3.1%"></i></span><span class="tk-val">1,7 M</span></div><div class="tk-row"><span class="tk-name">Jailbreak e preparazione dei dispositivi</span><span class="tk-bar"><i style="width:2.1%"></i></span><span class="tk-val">1,1 M</span></div><div class="tk-row"><span class="tk-name">Tutto il resto (video, pocket, ventilatore, prove)</span><span class="tk-bar"><i style="width:3.3%"></i></span><span class="tk-val">1,9 M</span></div></div>
+      <p class="tk-note">Come leggere i numeri. «Token nuovi» sono il testo che il modello ha letto per la prima volta più quello che ha scritto: è la misura più vicina al lavoro vero. A ogni passo il modello rilegge anche la conversazione già vista: contando queste riletture (cache) il totale sale a circa 5,4 miliardi di token. I totali sono misure; la ripartizione per filone è una stima fatta sugli argomenti di ogni sessione. I registri coprono solo il periodo indicato: il lavoro precedente, come la prima versione del saturimetro, non è contato.</p>
     </div>
   </section>
 
