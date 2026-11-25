@@ -271,6 +271,26 @@ footer .copy{color:var(--ink);margin-top:20px}
   .mono-badge{width:64px;height:64px;font-size:1.5rem;border-radius:18px}
   section{padding:64px 0}
 }
+/* ANDROID-hub (26/11): una sola griglia. Tutte le sezioni sulla stessa larghezza, titoli e introduzioni con le stesse
+   misure, colonne uguali, emersione semplice (la prospettiva spostava le colonne fuori allineamento). */
+:root{--wrap:1160px}
+.sale-wrap{max-width:var(--wrap)}
+h2{max-width:22ch}
+.intro{max-width:64ch;margin-bottom:48px}
+.hero .lead{max-width:52ch}
+.cards{perspective:none;align-items:stretch}
+.js .reveal{transform:translateY(28px);transition:opacity .7s ease,transform .8s cubic-bezier(.2,.75,.2,1)}
+.js .reveal.in{transform:none}
+.tk-top,.steps,.start{gap:22px}
+.tk-top{margin-bottom:22px}
+.start{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:56px}
+.start .step{display:flex;flex-direction:column;gap:10px}
+.start .step h3{margin:4px 0 0}
+.start code{font:600 .88em/1 var(--mono);color:var(--green)}
+.tk-head{font:600 1.15rem/1.3 var(--display);color:var(--ink);margin:0 0 18px}
+.tk-head span{display:block;font:500 .78rem/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px}
+.offline{max-width:none}
+@media (max-width:960px){.start{grid-template-columns:1fr}}
 /* etichette dell'apertura leggibili sopra la traccia */
 .hud > * { background: rgba(3, 6, 10, 0.78); padding: 8px 12px; border-radius: 10px; margin: -8px -12px; }
 </style>
@@ -288,6 +308,7 @@ footer .copy{color:var(--ink);margin-top:20px}
       <a href="#ecosistema">L'ecosistema</a>
       <a href="#insieme">Insieme</a>
       <a href="#metodo">Il metodo</a>
+      <a href="#ia">Parti da qui</a>
       <a href="#chi">Chi c'è dietro</a>
     </nav>
   </div>
@@ -364,16 +385,22 @@ footer .copy{color:var(--ink);margin-top:20px}
 
   <section id="ia" class="backdrop">
     <div class="wrap">
-      <p class="kicker">Sviluppo guidato dall'IA</p>
-      <h2>Quanto lavoro c'è dentro, contato in token.</h2>
-      <p class="intro">similFranz è scritto con Claude Code, sotto la guida e la verifica dell'autore. Qui trovi il conto, misurato dai registri delle sessioni: un punto di partenza onesto per chi vuole stimare un progetto simile nel proprio centro.</p>
+      <p class="kicker">Parti da qui · sviluppo guidato dall'IA</p>
+      <h2>L'idea e il primo sviluppo sono già fatti. Il resto puoi farlo tu.</h2>
+      <p class="intro">similFranz mette a disposizione l'idea e un primo sviluppo completo, costruito con Claude Code sotto la guida e la verifica dell'autore. Il codice è aperto: chiunque può partire da qui, adattarlo al proprio centro e portarlo oltre, con lo stesso metodo.</p>
+      <div class="start">
+        <div class="step reveal"><span class="n">01</span><h3>Prendi il progetto</h3><p>Fai una copia (fork) della repository su GitHub®: codice, guide, gusci da stampare e test sono tutti lì, con le loro licenze aperte.</p></div>
+        <div class="step reveal"><span class="n">02</span><h3>Riparti con l'IA</h3><p>Apri Claude Code nella cartella: il file <code>CLAUDE.md</code> gli spiega il progetto, le regole e come si prova. Descrivi che cosa ti serve per il tuo scenario.</p></div>
+        <div class="step reveal"><span class="n">03</span><h3>Verifica e condividi</h3><p>Più di mille controlli automatici ti dicono se una modifica rompe qualcosa. Poi racconta alla comunità che cosa hai migliorato.</p></div>
+      </div>
+      <p class="tk-head"><span>Quanto lavoro c'è già dentro</span>Il conto del primo sviluppo, misurato dai registri delle sessioni.</p>
       <div class="tk-top reveal">
         <div class="tk-num"><b>96 milioni</b><span>di token nuovi, fra testo letto e testo scritto</span></div>
         <div class="tk-num"><b>17.935</b><span>richieste al modello in 27 sessioni</span></div>
         <div class="tk-num"><b>23 giorni</b><span>dal 2 al 24 novembre 2026</span></div>
       </div>
       <div class="tk-list reveal" role="group" aria-label="Token nuovi per filone di lavoro, in milioni"><div class="tk-row"><span class="tk-name">Monitor e controller per Android</span><span class="tk-bar"><i style="width:100.0%"></i></span><span class="tk-val">56,1 M</span></div><div class="tk-row"><span class="tk-name">Monitor per iPad</span><span class="tk-bar"><i style="width:27.1%"></i></span><span class="tk-val">15,2 M</span></div><div class="tk-row"><span class="tk-name">Gusci stampati in 3D</span><span class="tk-bar"><i style="width:15.5%"></i></span><span class="tk-val">8,7 M</span></div><div class="tk-row"><span class="tk-name">Pagine, repo e documentazione</span><span class="tk-bar"><i style="width:12.9%"></i></span><span class="tk-val">7,2 M</span></div><div class="tk-row"><span class="tk-name">CTG</span><span class="tk-bar"><i style="width:4.5%"></i></span><span class="tk-val">2,5 M</span></div><div class="tk-row"><span class="tk-name">Saturimetro su iPod touch</span><span class="tk-bar"><i style="width:3.4%"></i></span><span class="tk-val">2,0 M</span></div><div class="tk-row"><span class="tk-name">Controller per iPad</span><span class="tk-bar"><i style="width:3.1%"></i></span><span class="tk-val">1,7 M</span></div><div class="tk-row"><span class="tk-name">Jailbreak e preparazione dei dispositivi</span><span class="tk-bar"><i style="width:2.1%"></i></span><span class="tk-val">1,1 M</span></div><div class="tk-row"><span class="tk-name">Tutto il resto (video, pocket, ventilatore, prove)</span><span class="tk-bar"><i style="width:3.3%"></i></span><span class="tk-val">1,9 M</span></div></div>
-      <p class="tk-note">Come leggere i numeri. «Token nuovi» sono il testo che il modello ha letto per la prima volta più quello che ha scritto: è la misura più vicina al lavoro vero. A ogni passo il modello rilegge anche la conversazione già vista: contando queste riletture (cache) il totale sale a circa 5,4 miliardi di token. I totali sono misure; la ripartizione per filone è una stima fatta sugli argomenti di ogni sessione. I registri coprono solo il periodo indicato: il lavoro precedente, come la prima versione del saturimetro, non è contato.</p>
+      <p class="tk-note">Un punto di partenza onesto anche per stimare un progetto simile nel tuo centro. Come leggere i numeri: «Token nuovi» sono il testo che il modello ha letto per la prima volta più quello che ha scritto: è la misura più vicina al lavoro vero. A ogni passo il modello rilegge anche la conversazione già vista: contando queste riletture (cache) il totale sale a circa 5,4 miliardi di token. I totali sono misure; la ripartizione per filone è una stima fatta sugli argomenti di ogni sessione. I registri coprono solo il periodo indicato: il lavoro precedente, come la prima versione del saturimetro, non è contato.</p>
     </div>
   </section>
 
