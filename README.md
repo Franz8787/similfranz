@@ -23,7 +23,8 @@ Altri dispositivi sono in cantiere.
 - **Monitor per iPad**: un monitor-defibrillatore con tre layout originali (ICU, extraH, DAE). Dalla regia dai i cue al momento
   giusto, conduci lo scenario a fasi, e il registro prepara il debriefing.
 - **Monitor per Android**: monitor e controller su due tablet, collegati in modo diretto, con un modello fisiologico che lega
-  ritmo, circolo e respiro.
+  ritmo, circolo e respiro. Nel guscio i tasti fisici del tablet diventano accensione, carica e scarica, con suono e
+  vibrazione.
 
 Monitor e regia si collegano direttamente fra loro; il saturimetro si appoggia all'hotspot del tuo telefono.
 Niente router, niente internet, niente abbonamenti.

@@ -85,7 +85,7 @@ window.SIMILFRANZ_PROGETTI = [
     id: "monitor-android",
     nome: "similFranz Monitor per Android",
     dispositivo: "Samsung® Galaxy® Tab Active2 o tablet Android™ 8 e successivi",
-    descrizione: "Monitor e controller su due tablet, collegati in modo diretto. Un modello fisiologico lega ritmo, circolo e respiro: l'EtCO₂ segue la RCP, la pletismografia la perfusione. Scenari a fasi, esito di ogni scarica deciso da te, guscio stampabile con maniglia.",
+    descrizione: "Monitor e controller su due tablet, collegati in modo diretto. Un modello fisiologico lega ritmo, circolo e respiro: l'EtCO₂ segue la RCP, la pletismografia la perfusione. Scenari a fasi, esito di ogni scarica deciso da te. Nel guscio stampabile i tasti fisici del tablet diventano accensione, carica e scarica, con suono e vibrazione; il volume del monitor lo regoli dalla regia, a distanza.",
     stato: "in arrivo",
     pagina: "https://franz8787.github.io/similfranz-monitor-android/",
     immagine: "img/monitor-android.jpg",
