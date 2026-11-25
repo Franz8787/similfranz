@@ -600,7 +600,7 @@ footer .legal p{break-inside:avoid}
   var trace = new THREE.Mesh(geo, traceMat);
   var traceGroup = new THREE.Group();
   traceGroup.add(trace);
-  traceGroup.rotation.set(-0.42, -0.12, 0.0);
+  traceGroup.rotation.set(-0.22, 0.0, 0.0);   // 26/11: quasi frontale, in asse con la pagina
   scene.add(traceGroup);
 
   /* testina luminosa */
@@ -663,10 +663,11 @@ footer .legal p{break-inside:avoid}
   // respiro (impedenza): inspirazione più breve dell'espirazione, curva morbida
   function respW(t){ var p = 4.6, x = (t % p)/p; var y = x < 0.4 ? smooth01(0, 0.4, x) : 1 - smooth01(0.4, 1.0, x); return y - 0.5; }
   var WAVES = [
-    { fn: plethW, color: 0x5fd4ff, win: 6,  at: 0.2,  z: -6,  x: 1.5,  amp: 0.9, rot: 0.10 },
-    { fn: capnoW, color: 0xffd34d, win: 20, at: 0.4,  z: -9,  x: -2.0, amp: 1.0, rot: -0.12 },
-    { fn: artW,   color: 0xff5f6d, win: 5,  at: 0.6,  z: -7,  x: 2.5,  amp: 1.0, rot: 0.08 },
-    { fn: respW,  color: 0xcfd8e3, win: 24, at: 0.8,  z: -11, x: -1.0, amp: 1.0, rot: -0.06 }
+    // ANDROID-hub (26/11): ordinate come i canali di un monitor: orizzontali, centrate, stessa profondità, passo regolare
+    { fn: plethW, color: 0x5fd4ff, win: 6,  at: 0.2,  z: -8, x: 0, amp: 0.9, rot: 0 },
+    { fn: capnoW, color: 0xffd34d, win: 20, at: 0.4,  z: -8, x: 0, amp: 0.9, rot: 0 },
+    { fn: artW,   color: 0xff5f6d, win: 5,  at: 0.6,  z: -8, x: 0, amp: 0.9, rot: 0 },
+    { fn: respW,  color: 0xcfd8e3, win: 24, at: 0.8,  z: -8, x: 0, amp: 0.9, rot: 0 }
   ];
   var waveMatSrc = {
     vertexShader: 'attribute float aSide; attribute float aU; varying float vSide; varying float vU; void main(){ vSide=aSide; vU=aU; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
@@ -679,9 +680,9 @@ footer .legal p{break-inside:avoid}
     for (i=0;i<NW-1;i++){ var a=2*i; ix.push(a,a+1,a+2, a+1,a+3,a+2); }
     var gq = new THREE.BufferGeometry();
     gq.setAttribute('position', new THREE.BufferAttribute(p,3)); gq.setAttribute('aSide', new THREE.BufferAttribute(sd,1)); gq.setAttribute('aU', new THREE.BufferAttribute(uu,1)); gq.setIndex(ix);
-    var m = new THREE.ShaderMaterial({ uniforms:{ uColor:{value:new THREE.Color(w.color)}, uDim:{value:0.24} }, vertexShader:waveMatSrc.vertexShader, fragmentShader:waveMatSrc.fragmentShader, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide });
+    var m = new THREE.ShaderMaterial({ uniforms:{ uColor:{value:new THREE.Color(w.color)}, uDim:{value:0.17} }, vertexShader:waveMatSrc.vertexShader, fragmentShader:waveMatSrc.fragmentShader, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide });
     var mesh = new THREE.Mesh(gq, m); mesh.frustumCulled = false;
-    var grp = new THREE.Group(); grp.add(mesh); grp.rotation.set(-0.15, w.rot, 0); scene.add(grp);
+    var grp = new THREE.Group(); grp.add(mesh); grp.rotation.set(-0.08, w.rot, 0); scene.add(grp);
     w.pos = p; w.geo = gq; w.mat = m; w.grp = grp;
   });
   function updateWaves(t){
@@ -770,7 +771,7 @@ footer .legal p{break-inside:avoid}
     var sc = Math.min(1, visW*1.15/LEN*1.1);
     if (camera.aspect < 0.8) sc = Math.max(sc, 0.42);
     traceGroup.scale.setScalar(sc);
-    traceGroup.userData.baseY = camera.aspect < 0.8 ? -1.75 : -3.7;
+    traceGroup.userData.baseY = camera.aspect < 0.8 ? -1.75 : -3.95;   // 26/11: sotto i fatti chiave, nella fascia libera
     applyScroll();
     if (reduce) render();
   }
