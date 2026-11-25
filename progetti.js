@@ -88,8 +88,8 @@ window.SIMILFRANZ_PROGETTI = [
     descrizione: "Monitor e regia su due tablet, collegati in modo diretto. L'EtCO₂ segue la RCP, la pletismografia la perfusione; l'esito di ogni scarica lo decidi tu. Nel guscio i tasti del tablet diventano accensione, carica e scarica.",
     stato: "in arrivo",
     pagina: "https://franz8787.github.io/similfranz-monitor-android/",
-    immagine: "img/monitor-android.jpg",
-    alt: "Rendering del monitor similFranz per Android nel suo guscio con maniglia: schermo acceso in fibrillazione ventricolare",
+    immagine: "img/monitor-android.jpg?v=2",
+    alt: "Rendering del monitor similFranz per Android nel suo guscio con maniglia, con davanti il tablet di regia",
     accento: "#ffbe5c",
     regia_web: "regia web dal computer: parametri, stati, scenari, Sala in diretta, Storia Sim",
     sala: {
