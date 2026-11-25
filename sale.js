@@ -669,6 +669,7 @@
     p2: { top: 0x4a78c2, bottom: 0x35558a },
     istr: { top: 0x2b2f36, bottom: 0x1f2329 },
     w1: { top: 0x6b5ca5, bottom: 0x3a3550 },
+    autore: { top: 0x2b3340, bottom: 0x3b4a5e },
     w2: { top: 0x2f8f9d, bottom: 0x2a6f7a },
     d: { top: 0x4a78c2, bottom: 0x35558a },
     // divise da soccorso generiche, alta visibilità: nessuna scritta, logo o sigla
@@ -689,6 +690,46 @@
       ring.scale.setScalar(1 / ws);
       b.add(ring);
     });
+  }
+  // chi ha creato similFranz, al banco del laboratorio: cresta verde fluo, lati rasati, barba lunga castano chiaro.
+  // Cresta e barba sono attaccate all'osso della testa: seguono i movimenti.
+  function autore(m, gp) {
+    var hb = findBone(m, "Head"), he = findNode(m, "Head_end"); if (!hb || !he) return;
+    m.traverse(function (o) {
+      if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach(function (c) { if (/Hair/i.test(c.name)) c.color.set(0x4a3a2c); });
+    });
+    gp.updateMatrixWorld(true);
+    var a = hb.getWorldPosition(new THREE.Vector3()), b = he.getWorldPosition(new THREE.Vector3());
+    var up = b.clone().sub(a), h = up.length(); up.normalize();
+    var fwd = new THREE.Vector3(Math.sin(gp.rotation.y), 0, Math.cos(gp.rotation.y)); fwd.sub(up.clone().multiplyScalar(fwd.dot(up))).normalize();
+    var R = h * 0.5, C = a.clone().add(up.clone().multiplyScalar(h * 0.5));
+    var green = new THREE.MeshStandardMaterial({ color: 0x39ff14, emissive: 0x1c9a08, emissiveIntensity: 0.6, roughness: 0.6 });
+    var brown = new THREE.MeshStandardMaterial({ color: 0xb08a5a, roughness: 0.95 });
+    var parts = [];
+    // cresta: punte dalla fronte alla nuca, più alte al centro
+    for (var k = 0; k <= 8; k++) {
+      var th = -0.75 + (1.95 * k) / 8, len = R * (1.0 + 0.7 * Math.sin(Math.PI * k / 8));
+      var dir = up.clone().multiplyScalar(Math.cos(th)).add(fwd.clone().multiplyScalar(Math.sin(th))).normalize();
+      var sp = new THREE.Mesh(new THREE.ConeGeometry(R * 0.3, len, 6), green);
+      sp.scale.z = 0.45; sp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+      sp.position.copy(C).add(dir.clone().multiplyScalar(R * 0.88 + len * 0.45));
+      parts.push(sp);
+    }
+    // barba lunga: dal mento verso il petto, appiattita
+    var bd = new THREE.Mesh(new THREE.ConeGeometry(R * 0.75, R * 2.6, 10), brown);
+    var down = up.clone().multiplyScalar(-1).add(fwd.clone().multiplyScalar(0.45)).normalize();
+    bd.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), down);
+    bd.scale.set(1, 1, 0.55);
+    bd.position.copy(C).add(fwd.clone().multiplyScalar(R * 1.0)).add(up.clone().multiplyScalar(-R * 0.55)).add(down.clone().multiplyScalar(R * 1.1));
+    parts.push(bd);
+    var jaw = new THREE.Mesh(new THREE.SphereGeometry(R * 0.78, 12, 8), brown);
+    jaw.scale.set(1.05, 0.7, 0.75);
+    jaw.position.copy(C).add(fwd.clone().multiplyScalar(R * 0.72)).add(up.clone().multiplyScalar(-R * 0.62));
+    parts.push(jaw);
+    // posizioni calcolate nel mondo: le porto nel sistema dell'osso della testa
+    hb.updateWorldMatrix(true, false);
+    var inv = new THREE.Matrix4().copy(hb.matrixWorld).invert();
+    parts.forEach(function (p) { p.updateMatrix(); p.matrix.premultiply(inv); p.matrix.decompose(p.position, p.quaternion, p.scale); hb.add(p); });
   }
   var FILES = { p1: "modelli/donna2.glb", p2: "modelli/uomo.glb", istr: "modelli/donna.glb", manichino: "modelli/uomo.glb" };
   function clipOf(gltf, re) { return gltf.animations.filter(function (a) { return re.test(a.name); })[0]; }
@@ -738,9 +779,10 @@
         });
       });
       (function () {
-        var w = LAB.worker, m = prepPerson(gs[0], LOOKS.w1);
+        var w = LAB.worker, m = prepPerson(gs[1], LOOKS.autore);
         var gp = new THREE.Group(); gp.position.set(w.x, 0, w.z); gp.rotation.y = w.rotY; gp.add(m); LAB.group.add(gp); personShadow(gp);
-        var mx = new THREE.AnimationMixer(m), c = clipOf(gs[0], /Idle/);
+        autore(m, gp);
+        var mx = new THREE.AnimationMixer(m), c = clipOf(gs[1], /Idle/);
         if (c) mx.clipAction(c).play();
         mx.update(0.001); mixers.push(mx);
         LAB.workerRig = { group: gp, model: m, rig: rigOf(m), mixer: mx };
@@ -1389,7 +1431,13 @@
     line.push([cx1, 0]);
     var marks = [[PLAN.x0 + 0.35, 0.3], [PLAN.x1 - 0.3, -0.3]];
     if (PLAN.f0 - PLAN.x0 > 1.5) marks.push([(PLAN.x0 + PLAN.f0) / 2 + 0.6, CW / 2 - 0.3]);
-    return { corridor: line, stops: stops, marks: marks.map(function (m) { return { x: m[0], z: m[1] }; }) };
+    var start = null;
+    fixed.forEach(function (f) {
+      if (f.kind !== "lab") return;
+      var gx = f.group.position.x, gz = f.group.position.z;
+      start = { x: gx + f.worker.x + 0.55, z: gz + f.worker.z + 0.45, lookX: gx + f.worker.x, lookZ: gz + f.worker.z };
+    });
+    return { corridor: line, stops: stops, start: start, marks: marks.map(function (m) { return { x: m[0], z: m[1] }; }) };
   }
   /* geometria statica (pareti, pavimenti, arredi) fusa per materiale: da ~600 a poche decine di draw call */
   (function mergeStatic() {
@@ -1422,7 +1470,7 @@
   var blister = null;
   try {
     blister = window.Blister ? window.Blister.attach({ THREE: THREE, scene: root, reduce: reduce, mobile: (canvas.clientWidth || window.innerWidth) < 860,
-      corridor: BL_PATHS.corridor, stops: BL_PATHS.stops, marks: BL_PATHS.marks, floorY: 0 }) : null;
+      corridor: BL_PATHS.corridor, stops: BL_PATHS.stops, marks: BL_PATHS.marks, start: BL_PATHS.start, floorY: 0 }) : null;
   } catch (e) { blister = null; if (window.console) console.warn("Blister:", e); }
 
   /* ---------- animazione ---------- */

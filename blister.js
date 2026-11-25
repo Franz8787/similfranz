@@ -450,7 +450,16 @@
       aggiornaPozze(dt);
     }
 
-    if (fermo) {
+    var via0 = opts.start && numero(opts.start.x) && numero(opts.start.z) ? opts.start : null;
+    if (via0) {
+      // parte dal laboratorio: seduto accanto a chi lavora al banco, poi esce dalla porta verso il corridoio
+      radice.position.set(via0.x, y0, via0.z);
+      S.nodo = nodoVicino(via0.x, via0.z); S.fuori = true;
+      radice.rotation.y = numero(via0.lookX) && numero(via0.lookZ) ? Math.atan2(via0.lookX - via0.x, via0.lookZ - via0.z) : 0;
+      S.sedK = 1; S.sedO = 1; S.suK = 0.5; S.codaO = 0.55;
+      if (fermo) { S.stato = "fermo"; } else { S.stato = "riposo"; S.timer = tra(3, 5); }
+      posa();
+    } else if (fermo) {
       // movimento ridotto: seduto e fermo al primo punto del corridoio
       S.sedK = 1; S.suK = 0.5; S.stato = "fermo";
       radice.rotation.y = cor.length > 1 && !uguali(cor[0], cor[1]) ? Math.atan2(cor[1][0] - cor[0][0], cor[1][1] - cor[0][1]) : 0.5;
