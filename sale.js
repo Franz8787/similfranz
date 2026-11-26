@@ -26,6 +26,7 @@
   if (cards) {
     P.forEach(function (p) {
       var a = el("article", "card reveal");
+      a.id = "p-" + p.id;
       a.style.setProperty("--acc", p.accento || "#46f2a0");
       a.innerHTML =
         '<figure><img src="' + esc(p.immagine) + '" loading="lazy" alt="' + esc(p.alt || p.nome) + '"></figure>' +
