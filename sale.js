@@ -30,7 +30,7 @@
       a.innerHTML =
         '<figure><img src="' + esc(p.immagine) + '" loading="lazy" alt="' + esc(p.alt || p.nome) + '"></figure>' +
         '<div class="body">' + statusHTML(p) + "<h3>" + esc(p.nome) + "</h3>" +
-        '<p class="device">' + esc(p.dispositivo) + "</p><p>" + esc(p.descrizione) + "</p>" + doiHTML(p) +
+        '<p class="device">' + esc(p.dispositivo) + "</p><p class=\"desc\">" + esc(p.descrizione) + "</p>" + doiHTML(p) +
         '<div class="links">' + enterHTML(p) + "</div></div>";
       cards.appendChild(a);
     });

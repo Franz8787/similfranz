@@ -81,6 +81,10 @@ h1 em{font-style:normal;color:var(--hub);text-shadow:0 0 28px rgba(209,140,255,.
 .btn:hover{border-color:rgba(209,140,255,.5);color:var(--ink)}
 .btn.primary{background:var(--hub);color:#14051f;border-color:var(--hub)}
 .btn.primary:hover{background:#e6b8ff;color:#14051f}
+/* schede dei dispositivi e delle sale: il colore del dispositivo (--acc), non quello dell'hub */
+.card .status,.room-card .status{color:var(--acc);border-color:rgba(255,255,255,.18);border-color:color-mix(in srgb,var(--acc) 42%,transparent)}
+.card .btn.primary,.room-card .btn.primary{background:var(--acc);border-color:var(--acc);color:#071015}
+.card .btn.primary:hover,.room-card .btn.primary:hover{background:var(--acc);filter:brightness(1.12);color:#071015}
 .hud{position:absolute;left:var(--gutter);right:var(--gutter);bottom:28px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;max-width:calc(var(--wrap) - 2*var(--gutter));margin:0 auto;font:500 .8rem/1.4 var(--mono);color:var(--muted);pointer-events:none}
 .hud b{display:block;font:700 1.6rem/1 var(--mono);color:var(--hub);transition:color .4s}
 .hud .vf b{color:var(--amber)}
@@ -335,6 +339,42 @@ footer .legal p{break-inside:avoid}
   .card .enter{min-height:44px}
   .doi a{display:inline-block;padding:14px 0;margin:-14px 0}
   .note,.regia-list li,.lab-steps{font-size:.875rem}
+}
+/* schede dell'ecosistema: stesse righe in tutte le card (subgrid) e composizione a pezzi all'ingresso */
+@supports (grid-template-rows:subgrid){
+  @media (min-width:961px){
+    .cards{grid-auto-rows:auto}
+    .card{display:grid;grid-row:span 7;grid-template-rows:subgrid;row-gap:0}
+    .card .body{grid-row:2 / span 6;display:grid;grid-template-rows:subgrid;row-gap:12px}
+    .card .status{grid-row:1;align-self:start;justify-self:start}
+    .card h3{grid-row:2}
+    .card .device{grid-row:3}
+    .card .desc{grid-row:4}
+    .card .doi{grid-row:5;align-self:end}
+    .card .links{grid-row:6;margin-top:0;align-self:end}
+  }
+}
+@supports not (grid-template-rows:subgrid){
+  .card .doi{margin-top:auto}
+  .card .doi + .links{margin-top:0}
+}
+.js .cards .card.reveal{transform:translateY(16px);transition:opacity .4s ease,transform .6s cubic-bezier(.2,.75,.2,1)}
+.js .cards .card.reveal.in{transform:none}
+.card{--d:0s}
+.cards .card:nth-child(2){--d:.12s}
+.cards .card:nth-child(3){--d:.24s}
+.js .card.reveal figure img,.js .card.reveal .body > *{opacity:0;
+  transition:opacity .45s ease calc(var(--d) + var(--i,0)*70ms),transform .6s cubic-bezier(.2,.75,.2,1) calc(var(--d) + var(--i,0)*70ms)}
+.js .card.reveal figure img{transform:scale(1.07);transition-duration:.6s,.9s}
+.js .card.reveal .body > *{transform:translateY(10px)}
+.js .card.reveal .status::before{transform:scale(0);transition:transform .4s cubic-bezier(.2,.75,.2,1) calc(var(--d) + 200ms)}
+.card .status{--i:1}.card h3{--i:2}.card .device{--i:3}.card .desc{--i:4}.card .doi{--i:5}.card .links{--i:6}
+.js .card.reveal.in figure img,.js .card.reveal.in .body > *,.js .card.reveal.in .status::before{opacity:1;transform:none}
+/* conteggio dei token: cifre a larghezza fissa, la barra cresce da sinistra */
+.tk-num b,.tk-val{font-variant-numeric:tabular-nums}
+.tk-bar i{transform-origin:0 50%}
+@media (prefers-reduced-motion:reduce){
+  .js .card.reveal figure img,.js .card.reveal .body > *,.js .card.reveal .status::before{opacity:1;transform:none;transition:none}
 }
 </style>
 </head>
@@ -602,6 +642,67 @@ requestAnimationFrame(function(n){last=n;step(n)});
 </footer>
 
 <script>document.documentElement.classList.add('js');</script>
+<script>
+/* «Quanto lavoro c'è già dentro»: i numeri contano da 0 e le barre crescono quando la sezione entra nello schermo.
+   I valori finali restano nell'HTML; senza JS, senza IntersectionObserver o con movimento ridotto non cambia nulla. */
+(function(){
+  "use strict";
+  if (!("IntersectionObserver" in window) || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+  function fmt(v, dec){ // formato italiano: punto per le migliaia, virgola per i decimali
+    var s = v.toFixed(dec).split("."), i = s[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return dec ? i + "," + s[1] : i;
+  }
+  function prep(el){
+    var m = /^([\d.,]+)(.*)$/.exec(el.textContent.trim());
+    if (!m) return null;
+    var dec = (m[1].split(",")[1] || "").length, end = parseFloat(m[1].replace(/\./g, "").replace(",", "."));
+    var o = { el: el, end: end, dec: dec, tail: m[2], txt: el.textContent };
+    el.textContent = fmt(0, dec) + m[2];
+    return o;
+  }
+  function ease(t){ return 1 - Math.pow(1 - t, 4); } // frenata morbida
+  function run(items){
+    var t0 = performance.now();
+    function frame(now){
+      var busy = false;
+      items.forEach(function(it){
+        var t = Math.min(1, Math.max(0, (now - t0 - it.delay) / it.dur)), k = ease(t);
+        if (t < 1) busy = true;
+        if (it.num) it.num.el.textContent = t >= 1 ? it.num.txt : fmt(it.num.end * k, it.num.dec) + it.num.tail;
+        if (it.bar) it.bar.style.transform = t >= 1 ? "" : "scaleX(" + k + ")";
+      });
+      if (busy) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  var groups = [];
+  var top = document.querySelector(".tk-top");
+  if (top) {
+    var its = [];
+    top.querySelectorAll(".tk-num b").forEach(function(b, i){ var n = prep(b); if (n) its.push({ num: n, delay: 150 + i * 120, dur: 1600 }); });
+    groups.push([top, its]);
+  }
+  var list = document.querySelector(".tk-list");
+  if (list) {
+    var rows = [];
+    list.querySelectorAll(".tk-row").forEach(function(r, i){
+      var bar = r.querySelector(".tk-bar i"), v = r.querySelector(".tk-val");
+      var it = { num: v ? prep(v) : null, bar: bar, delay: 200 + i * 90, dur: 1100 };
+      if (bar) bar.style.transform = "scaleX(0)";
+      rows.push(it);
+    });
+    groups.push([list, rows]);
+  }
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if (!e.isIntersecting) return;
+      io.unobserve(e.target);
+      groups.forEach(function(g){ if (g[0] === e.target) run(g[1]); });
+    });
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.15 });
+  groups.forEach(function(g){ io.observe(g[0]); });
+})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
