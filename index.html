@@ -403,14 +403,14 @@ html{scroll-padding-top:68px}
 .sf-eco .rt{font:700 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.05em;color:var(--acc);min-width:52px;text-align:right;white-space:nowrap}
 .sf-eco .rt.al{color:#ff5d5d;animation:sfEcoAl .8s steps(2) infinite}
 .sf-eco .sec{display:flex;gap:2px;margin:0 auto;padding:0 8px}
-.sf-eco .sec a{position:relative;height:36px;display:inline-flex;align-items:center;padding:0 11px;border-radius:9px;color:#a9bac2;white-space:nowrap;transition:color .2s,background .2s}
+.sf-eco .sec a{position:relative;height:40px;display:inline-flex;align-items:center;padding:0 11px;border-radius:9px;color:#a9bac2;white-space:nowrap;transition:color .2s,background .2s}
 .sf-eco .sec a:hover{color:#fff;background:rgba(255,255,255,.06)}
 .sf-eco .sec a.on{color:#fff}
 .sf-eco .sec a.on::after{content:"";position:absolute;left:11px;right:11px;bottom:4px;height:2px;border-radius:2px;background:var(--acc);box-shadow:0 0 6px var(--acc)}
 .sf-eco .cta{height:34px;display:inline-flex;align-items:center;background:var(--acc);color:#071015;padding:0 16px;border-radius:999px;font-weight:700;white-space:nowrap;transition:filter .2s,transform .2s}
 .sf-eco .cta:hover{filter:brightness(1.12);transform:translateY(-1px)}
 .sf-eco .seg{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
-.sf-eco .seg a{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:999px;color:#b4c3ca;white-space:nowrap;transition:background .2s,color .2s}
+.sf-eco .seg a{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 12px;border-radius:999px;color:#b4c3ca;white-space:nowrap;transition:background .2s,color .2s}
 .sf-eco .seg a i{width:8px;height:8px;border-radius:50%;background:var(--a);transition:box-shadow .2s}
 .sf-eco .seg a:hover{color:#fff;background:rgba(255,255,255,.08)}
 .sf-eco .seg a:hover i{box-shadow:0 0 0 3px rgba(255,255,255,.08),0 0 10px var(--a)}
@@ -424,13 +424,15 @@ html{scroll-padding-top:68px}
 @keyframes sfEcoBeat{0%{box-shadow:0 0 0 0 var(--a)}12%{box-shadow:0 0 0 4px rgba(255,255,255,.12)}40%,100%{box-shadow:0 0 0 7px transparent}}
 @keyframes sfEcoAl{50%{opacity:.35}}
 @media (max-width:760px){.sf-eco .mon{display:none}}
-@media (max-width:1430px){.sf-eco .sec{display:none}.sf-eco .rgt{margin-left:auto}}
+@media (max-width:1600px){.sf-eco.has-sec .mon,.sf-eco.has-sec .hub em{display:none}.sf-eco .sec a{padding:0 9px}}
+@media (max-width:1240px){.sf-eco .sec{display:none}.sf-eco .rgt{margin-left:auto}}
 @media (max-width:640px){.sf-eco{gap:6px}.sf-eco .hub em,.sf-eco .cta{display:none}.sf-eco .hub{padding:0 8px 0 4px}
   .sf-eco .seg a{padding:0 9px;gap:5px;height:36px}.sf-eco .seg{padding:2px}.sf-eco .seg .l{display:none}.sf-eco .seg .s{display:inline}}
 @media (max-width:380px){.sf-eco{padding:0 10px}.sf-eco .hub{padding:0 6px 0 2px;gap:6px}.sf-eco .seg a{padding:0 7px;gap:4px}}
+@media (pointer:coarse){.sf-eco .seg a,.sf-eco .hub,.sf-eco .cta{min-height:44px}.sf-eco{height:60px}}
 @media (prefers-reduced-motion:reduce){.sf-eco,.sf-eco .hub .hd,.sf-eco .rt.al{animation:none}.sf-eco{transition:none}}
 </style>
-<div class="sf-eco" id="sf-eco" role="navigation" aria-label="Ecosistema similFranz" style="--acc:#d18cff" data-onda="ecg">
+<div class="sf-eco has-sec" id="sf-eco" role="navigation" aria-label="Ecosistema similFranz" style="--acc:#d18cff" data-onda="ecg">
   <span class="pg" aria-hidden="true"></span>
   <a class="hub" href="#" aria-current="page" title="L'ecosistema similFranz"><i class="hd"></i><strong>similFranz</strong> <em>ecosistema</em></a>
   <span class="mon" aria-hidden="true"><canvas></canvas></span>
