@@ -14,7 +14,7 @@ Questa è la casa dell'ecosistema similFranz: la pagina **https://franz8787.gith
 |---|---|---|---|---|
 | **similFranz Saturimetro** | iPod touch® di 4ª generazione | disponibile · DOI [10.5281/zenodo.24064777](https://doi.org/10.5281/zenodo.24064777) | [pagina](https://franz8787.github.io/similfranz-saturimetro/) | [repo](https://github.com/Franz8787/similfranz-saturimetro) |
 | **similFranz Monitor per iPad** | iPad mini® di 1ª generazione, regia su un secondo iPad mini o sul Pocket (iPod touch® di 5ª generazione) | disponibile · DOI [10.5281/zenodo.24232019](https://doi.org/10.5281/zenodo.24232019) | [pagina](https://franz8787.github.io/similfranz-monitor/) | [repo](https://github.com/Franz8787/similfranz-monitor) |
-| **similFranz Monitor per Android** | Samsung® Galaxy® Tab Active2 o tablet Android™ 8 e successivi | in arrivo | [pagina](https://franz8787.github.io/similfranz-monitor-android/) (online alla pubblicazione) | in arrivo |
+| **similFranz Monitor per Android** | Samsung® Galaxy® Tab Active2 o tablet Android™ 8 e successivi | disponibile · DOI [10.5281/zenodo.24563982](https://doi.org/10.5281/zenodo.24563982) | [pagina](https://franz8787.github.io/similfranz-monitor-android/) | [repo](https://github.com/Franz8787/similfranz-monitor-android) |
 
 Altri dispositivi sono in cantiere.
 
