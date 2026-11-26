@@ -71,6 +71,14 @@ Rispetta «riduci movimento» del sistema, ha una versione statica quando WebGL 
 5. Se il modello viene da fuori, scrivi titolo, autore, pagina, licenza e data in `CREDITI.md` e nel footer.
    Ammesse CC0, CC BY, CC BY-SA.
 
+## Usalo, citalo, miglioralo
+
+Se similFranz ti è utile in un corso, un poster, una tesi o un articolo, usalo liberamente: è nato per questo.
+Citarlo è il modo più semplice per far sapere ad altri formatori, istruttori e facilitatori di simulazione che esiste,
+e per tenere unita la rete di chi lo usa. Ogni strumento ha il suo DOI su Zenodo e la citazione già pronta (pulsante
+**Cite this repository** e file `CITATION.cff` nella sua repository, link nella tabella qui sopra). E se lo migliori,
+raccontalo su GitHub, nella repository del progetto: segnalazioni, idee e modifiche sono benvenute.
+
 ## Licenze, marchi e responsabilità
 
 > **Solo per la simulazione sanitaria: non sono dispositivi medici, non misurano e non erogano nulla, mai su persone.**
