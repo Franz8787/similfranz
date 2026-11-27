@@ -424,7 +424,7 @@ footer .legal p{break-inside:avoid}
 .hero-band{position:relative;height:clamp(96px,15vh,150px);display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:22px}
 .hero-band > svg{position:absolute;left:calc(50% - 50vw);width:100vw;top:-6px;height:calc(100% - 20px);opacity:.9;pointer-events:none}
 .hero-band .hud{position:static;max-width:none;margin:0;display:block}
-.hero-band .hud > *{margin:0;background:rgba(3,6,10,.92);border:1px solid var(--line)}
+.hero-band .hud > *{position:relative;z-index:2;margin:0;background:rgba(3,6,10,.92);border:1px solid var(--line)}
 .scroll-cue{display:inline-flex;align-items:center;gap:12px;min-height:44px;padding:0 16px 0 12px;border-radius:999px;background:rgba(3,6,10,.72);border:1px solid var(--line);color:var(--ink);text-decoration:none;font:600 .9rem/1 var(--display)}
 .scroll-cue:hover{border-color:rgba(209,140,255,.6);color:#fff}
 .scroll-cue .mouse{position:relative;width:18px;height:28px;border-radius:10px;border:2px solid rgba(233,240,244,.7)}
@@ -1366,7 +1366,7 @@ requestAnimationFrame(function(n){last=n;step(n)});
   window.addEventListener('resize', resize);
   window.addEventListener('scroll', function(){ applyScroll(); if (reduce){ updateDevs(1, 0); render(); } }, {passive:true});
 
-  loadDevs();
+  // 27/11: dispositivi 3D in apertura tolti (troppo pesanti nello scorrimento): restano le foto
   if (reduce){
     fillStatic();
     updateWaves(2.3);
@@ -1387,7 +1387,7 @@ requestAnimationFrame(function(n){last=n;step(n)});
     // oltre l'apertura lo sfondo va a 30 fps
     if (window.__saleInVista) { prev = now; return; }
     hTick++;
-    if (scrollK > 0.9 && devP >= 1 && (hTick & 1)) { return; }
+    if (scrollK > 0.9 && (hTick & 1)) { return; }
     var dt = prev ? Math.min(0.05, (now - prev)/1000) : 0.016;
     prev = now;
     clock += dt;
