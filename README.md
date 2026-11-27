@@ -3,7 +3,8 @@
 **Apri quel cassetto: dentro c'è una sala di simulazione.**
 
 L'iPad®, l'iPod touch® e il tablet Android™ che avevi messo da parte diventano monitor, defibrillatore e saturimetro
-per la tua simulazione sanitaria. Tu conduci lo scenario, la squadra cresce.
+per la tua simulazione sanitaria. Nessun abbonamento, nessun account, nessun costo ricorrente.
+Tu conduci lo scenario, la squadra cresce.
 Open source, pensati per formatori, istruttori e facilitatori di simulazione.
 
 Questa è la casa dell'ecosistema similFranz: la pagina **https://franz8787.github.io/similfranz/** ti porta a ogni progetto.
